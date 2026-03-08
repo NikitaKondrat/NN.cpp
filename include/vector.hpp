@@ -11,4 +11,6 @@ public:
     Vector(size_t);
     ~Vector();
     float& operator[](size_t);
+    Vector(const Vector& other);
+    Vector& operator=(const Vector& other);
 };

@@ -24,7 +24,7 @@ Row& Matrix::operator[](size_t index) {
     return matrix[index];
 }
 
-// Умножение матрицы
+// Умножение матрицы на вектор
 Vector Matrix::operator*(const Vector& vec) {
     if (n_cols != vec.n) {
         throw std::invalid_argument(
