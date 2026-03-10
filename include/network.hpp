@@ -1,20 +1,26 @@
 #pragma once
 
 #include <cstddef>
-#include <vector>
-#include "vector.hpp"
-#include "matrix.hpp"
+#include <string>
+#include "utils.hpp"
 
-using Weight = Matrix;
-using Layer = Vector;
+using Loss = Vector (*)(const Vector&, const Vector&);
 
 class Network {
 private:
-    Weight* weights;
+    size_t n_layers;
     Layer* layers;
+    Weight* weights;
+    Weight* grads;
+    Loss lp;
+    Vector out;
 public:
-    Network(size_t, size_t, size_t); // num. of layers, dim. of input layer, dim. of output layer
+    Network(size_t, size_t, size_t, size_t);
     ~Network();
-    void get_data(std::vector<float>); // for input layer; primitive version
-    void propagate(); // forward-propagation
+    void fill_from_path(std::string);
+    void propagate(bool);
+    void backpropagate(bool);
+    void set_lp(Loss);
+    Layer& get_layer(size_t idx);
+    Weight& get_weight(size_t idx);
 };
