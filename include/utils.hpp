@@ -31,7 +31,7 @@ public:
     void set_z(Vector&&);
     Activation& activ();
     const Vector& z() const;
-    const Vector& gz() const;
+    Vector gz() const;
 };
 
 class Weight {

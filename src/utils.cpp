@@ -52,7 +52,7 @@ const Vector& Layer::z() const {
     return z_;
 }
 
-const Vector& Layer::gz() const {
+Vector Layer::gz() const {
     return z_.map(activ_.activ_deriv);
 }
 
