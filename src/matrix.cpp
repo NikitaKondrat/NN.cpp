@@ -46,13 +46,11 @@ Row& Matrix::operator[](size_t idx) {
 }
 
 Matrix Matrix::operator-(const Matrix& other) const {
-    auto op = [](const float& x, const float& y) -> float { return x - y; };
-    return apply_op(other, op);
+    return apply_op(other, op::sub);
 }
 
 Matrix& Matrix::operator-=(const Matrix& other) {
-    auto op = [](const float& x, const float& y) -> float { return x - y; };
-    Matrix result = apply_op(other, op);
+    Matrix result = apply_op(other, op::sub);
     swap(result);
     return *this;
 }
@@ -95,7 +93,7 @@ void Matrix::swap(Matrix& other) noexcept {
     std::swap(matrix, other.matrix);
 }
 
-Matrix Matrix::apply_op(const Matrix& other, float(*op)(const float&, const float&)) const {
+Matrix Matrix::apply_op(const Matrix& other, const std::function<float(const float&, const float&)>& op) const {
     if (n_rows != other.n_rows || n_cols != other.n_cols)
         throw std::invalid_argument("dimentional inconsistency in applied matrix operation");
     Matrix result = Matrix(n_rows, n_cols);

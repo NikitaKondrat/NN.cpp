@@ -13,7 +13,7 @@ private:
     Row* matrix;
     Matrix(size_t, size_t, Row*);
     void swap(Matrix&) noexcept;
-    Matrix apply_op(const Matrix&, float(*)(const float&, const float&)) const;
+    Matrix apply_op(const Matrix&, const std::function<float(const float&, const float&)>&) const;
 public:
     Matrix();
     Matrix(size_t, size_t);

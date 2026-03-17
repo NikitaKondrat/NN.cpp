@@ -42,25 +42,21 @@ float& Vector::operator[](size_t idx) {
 }
 
 Vector Vector::operator+(const Vector& other) const {
-    auto op = [](const float& x, const float& y) -> float { return x + y; };
-    return apply_op(other, op);
+    return apply_op(other, op::add);
 }
 
 Vector& Vector::operator+=(const Vector& other) {
-    auto op = [](const float& x, const float& y) -> float { return x + y; };
-    Vector result = apply_op(other, op);
+    Vector result = apply_op(other, op::add);
     swap(result);
     return *this;
 }
 
 Vector Vector::operator-(const Vector& other) const {
-    auto op = [](const float& x, const float& y) -> float { return x - y; };
-    return apply_op(other, op);
+    return apply_op(other, op::sub);
 }
 
 Vector& Vector::operator-=(const Vector& other) {
-    auto op = [](const float& x, const float& y) -> float { return x - y; };
-    Vector result = apply_op(other, op);
+    Vector result = apply_op(other, op::sub);
     swap(result);
     return *this;
 }
@@ -82,7 +78,7 @@ void Vector::swap(Vector& other) noexcept {
     std::swap(values, other.values);
 }
 
-Vector Vector::apply_op(const Vector& other, float (*op)(const float&, const float&)) const {
+Vector Vector::apply_op(const Vector& other, const std::function<float(const float&, const float&)>& op) const {
     if (n != other.n) 
         throw std::invalid_argument("same-dimensional vectors required for applied vector operation");
     Vector result(n);
@@ -114,4 +110,12 @@ Vector hadamar(const Vector& u, const Vector& v) {
     for (size_t i{}; i < u.size(); ++i)
         result_values[i] = u_values[i] * v_values[i];
     return result;
+}
+
+float op::add(const float& x, const float& y) {
+    return x + y;
+}
+
+float op::sub(const float& x, const float& y) {
+    return x - y;
 }

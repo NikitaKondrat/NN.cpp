@@ -12,7 +12,7 @@ private:
     float* values;
     Vector(size_t, float*);
     void swap(Vector&) noexcept;
-    Vector apply_op(const Vector&, float(*)(const float&, const float&)) const;
+    Vector apply_op(const Vector&, const std::function<float(const float&, const float&)>&) const;
 public:
     Vector();
     Vector(size_t);
@@ -35,3 +35,8 @@ public:
 };
 
 Vector hadamar(const Vector&, const Vector&);
+
+namespace op {
+    float add(const float& x, const float& y);
+    float sub(const float& x, const float& y);
+}
