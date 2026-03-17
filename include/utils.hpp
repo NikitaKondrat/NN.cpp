@@ -3,6 +3,7 @@
 #include "vector.hpp"
 #include "matrix.hpp"
 #include <functional>
+#include <string>
 
 float id(float);
 float id_deriv(float);
@@ -11,6 +12,8 @@ float sigmoid(float);
 float sigmoid_deriv(float);
 
 Vector mse_lp(const Vector&, const Vector&);
+
+Vector data_to_vector(const std::string&);
 
 class Activation {
 public:
