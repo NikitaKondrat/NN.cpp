@@ -30,7 +30,7 @@ Vector mse_lp(const Vector& est, const Vector& corr) {
 
 Activation::Activation() : activ(id), activ_deriv(id_deriv) { }
 
-Activation::Activation(float (*activ)(float), float (*activ_deriv)(float)) : activ(activ), activ_deriv(activ_deriv) { }
+Activation::Activation(const FtoF& activ, const FtoF& activ_deriv) : activ(activ), activ_deriv(activ_deriv) { }
 
 Activation::Activation(const Activation& activ) : activ(activ.activ), activ_deriv(activ.activ_deriv) { }
 

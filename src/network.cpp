@@ -86,7 +86,7 @@ void Network::backpropagate(bool with_out_activ = true) {
     }
 }
 
-void Network::set_lp(Loss lp) {
+void Network::set_lp(const Loss& lp) {
     this->lp = lp;
 }
 

@@ -4,7 +4,7 @@
 #include <string>
 #include "utils.hpp"
 
-using Loss = Vector (*)(const Vector&, const Vector&);
+using Loss = std::function<Vector(const Vector&, const Vector&)>;
 
 class Network {
 private:
@@ -20,7 +20,7 @@ public:
     void fill_from_path(std::string);
     void propagate(bool);
     void backpropagate(bool);
-    void set_lp(Loss);
+    void set_lp(const Loss&);
     Layer& get_layer(size_t idx);
     Weight& get_weight(size_t idx);
 };

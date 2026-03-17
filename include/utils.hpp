@@ -14,10 +14,10 @@ Vector mse_lp(const Vector&, const Vector&);
 
 class Activation {
 public:
-    float (*activ)(float);
-    float (*activ_deriv)(float);
+    FtoF activ;
+    FtoF activ_deriv;
     Activation();
-    Activation(float (*)(float), float (*)(float));
+    Activation(const FtoF&, const FtoF&);
     Activation(const Activation&);
 };
 

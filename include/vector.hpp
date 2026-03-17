@@ -4,7 +4,7 @@
 #include <initializer_list>
 #include <functional>
 
-using FtoF = float(*)(float);
+using FtoF = std::function<float(const float&)>;
 
 class Vector {
 private:
@@ -27,8 +27,8 @@ public:
     Vector& operator+=(const Vector&);
     Vector operator-(const Vector&) const;
     Vector& operator-=(const Vector&);
-    Vector& apply(FtoF);
-    Vector map(FtoF) const;
+    Vector& apply(const FtoF&);
+    Vector map(const FtoF&) const;
     size_t size() const;
     float* data();
     const float* data() const;

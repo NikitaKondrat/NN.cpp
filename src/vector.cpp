@@ -87,13 +87,13 @@ Vector Vector::apply_op(const Vector& other, const std::function<float(const flo
     return result;
 }
 
-Vector& Vector::apply(FtoF func) {
+Vector& Vector::apply(const FtoF& func) {
     for (size_t i{}; i < n; ++i)
         values[i] = func(values[i]);
     return *this;
 }
 
-Vector Vector::map(FtoF func) const {
+Vector Vector::map(const FtoF& func) const {
     Vector result(n);
     for (size_t i{}; i < n; ++i)
         result.values[i] = func(values[i]);
