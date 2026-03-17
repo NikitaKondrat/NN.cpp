@@ -108,7 +108,7 @@ Matrix Matrix::apply_op(const Matrix& other, const std::function<float(const flo
 }
 
 Matrix diag(const Vector& v) {
-    Matrix matrix{v.size(), v.size()};
+    Matrix matrix(v.size(), v.size());
     const float* v_values = v.data();
     for (size_t i{}; i < v.size(); ++i) {
         float* row = matrix.data()[i].data();
@@ -118,13 +118,14 @@ Matrix diag(const Vector& v) {
 }
 
 Matrix outer_product(const Vector& u, const Vector& v) {
-    Matrix matrix{u.size(), v.size()};
+    Matrix matrix(u.size(), v.size());
     const float* u_values = u.data();
     const float* v_values = v.data();
     for (size_t i{}; i < u.size(); ++i) {
         float* row = matrix.data()[i].data();
+        const float u_value = u_values[i];
         for (size_t j{}; j < v.size(); ++j)
-            row[j] = u_values[i] * v_values[j];
+            row[j] = u_value * v_values[j];
     }
     return matrix;
 }
@@ -137,8 +138,9 @@ Vector operator*(const Vector& v, const Matrix& matrix) {
     float* result_values = result.data();
     for (size_t i{}; i < matrix.rows(); ++i) {
         const float* matrix_row = matrix.data()[i].data();
+        const float v_value = v_values[i];
         for (size_t j{}; j < matrix.cols(); ++j)
-            result_values[j] += v_values[j] * matrix_row[j];
+            result_values[j] += v_value * matrix_row[j];
     }
     return result;
 }
