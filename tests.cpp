@@ -248,7 +248,7 @@ TEST_CASE("Matrix and Vector") {
     }
 
     SECTION("dismesion mismatch") {
-        Vector v_wrong{ 1, 2 };
+        Vector v_wrong{ 1, 2, 3 };
         REQUIRE_THROWS_AS(m * v_wrong, std::invalid_argument);
         REQUIRE_THROWS_AS(v_wrong * m, std::invalid_argument);
     }
@@ -275,7 +275,7 @@ TEST_CASE("Matrix special functions") {
         REQUIRE(m.rows() == 3);
         REQUIRE(m.cols() == 2);
         for (size_t i{}; i < 3; ++i)
-            for (size_t j{}; j < 3; ++j)
+            for (size_t j{}; j < 2; ++j)
                 REQUIRE(m[i][j] == Catch::Approx(u[i] * v[j]));
     }
 }
