@@ -24,7 +24,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2)
 
-add_executable(tests test.cpp 
+add_executable(tests tests.cpp 
     src/vector.cpp
     src/matrix.cpp 
     src/utils.cpp
