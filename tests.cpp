@@ -138,7 +138,7 @@ TEST_CASE("Matrix basic operation") {
         REQUIRE_THROWS_AS(m2[2], std::out_of_range);
 
         for (size_t i{}; i < m2_rows; ++i)
-            for (size_t j{}; j < m2_cols; ++i)
+            for (size_t j{}; j < m2_cols; ++j)
                 REQUIRE(m2[i][j] == Catch::Approx(0.0f));
 
         REQUIRE(m3[0][0] == Catch::Approx(1.0f));
@@ -273,7 +273,7 @@ TEST_CASE("Matrix special functions") {
         Vector v{ 4, 5 };
         Matrix m = outer_product(u, v);
         REQUIRE(m.rows() == 3);
-        REQUIRE(m.cols() == 3);
+        REQUIRE(m.cols() == 2);
         for (size_t i{}; i < 3; ++i)
             for (size_t j{}; j < 3; ++j)
                 REQUIRE(m[i][j] == Catch::Approx(u[i] * v[j]));
