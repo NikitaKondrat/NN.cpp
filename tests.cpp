@@ -201,7 +201,7 @@ TEST_CASE("Matrix basic operation") {
 TEST_CASE("Matrix arithmetic operation") {
     Matrix m1{ {1, 2, 3}, {4, 5, 6} };
     Matrix m2{ {10, 20, 30},{40, 50, 60} };
-    size_t rows = 2, cols = 2;
+    size_t rows = 2, cols = 3;
 
     SECTION("substrction") {
         Matrix r = m2 - m1;
