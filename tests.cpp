@@ -248,7 +248,7 @@ TEST_CASE("Matrix and Vector") {
     }
 
     SECTION("dismesion mismatch") {
-        Vector v_wrong{ 1, 2, 3 };
+        Vector v_wrong{ 1, 2, 3, 4};
         REQUIRE_THROWS_AS(m * v_wrong, std::invalid_argument);
         REQUIRE_THROWS_AS(v_wrong * m, std::invalid_argument);
     }
