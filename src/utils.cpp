@@ -1,6 +1,7 @@
 #include "utils.hpp"
 #include <cmath>
 #include <stdexcept>
+#include <fstream>
 
 float id(float x) {
     return x;
@@ -26,6 +27,27 @@ Vector mse_lp(const Vector& est, const Vector& corr) {
     for (size_t i{}; i < est.size(); ++i) 
         result[i] = 2 * (est[i] - corr[i]);
     return result;
+}
+
+Vector data_to_vector(const std::string& path) {
+    std::ifstream file(path);
+
+    size_t size;
+    if (file.is_open())
+        file >> size;
+
+    if (size == 0)
+        throw std::invalid_argument("size of vector cannot be less than one");
+    
+    Vector data(size);
+    size_t counter{};
+    while ((file >> data[counter]) && (++counter != size)) {}
+    
+    if (counter != size)
+        throw std::logic_error("not enough arguments for vector");
+
+    file.close();
+    return data;
 }
 
 Activation::Activation() : activ(id), activ_deriv(id_deriv) { }
