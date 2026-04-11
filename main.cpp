@@ -30,8 +30,6 @@ void train_bool_op(const std::string& s, const Data& ds) {
 }
 
 int main() {
-
-
     Data xor_ds = {
         {Vector{0, 0}, Vector{0}},
         {Vector{0, 1}, Vector{1}},
