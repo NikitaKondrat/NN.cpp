@@ -71,6 +71,15 @@ Vector Matrix::operator*(const Vector& v) const {
     return result;
 }
 
+Matrix& Matrix::apply(const FtoF& func) {
+    for (size_t i{}; i < n_rows; ++i) {
+        float* row = matrix[i].data();
+        for (size_t j{}; j < n_cols; ++j)
+            row[j] = func(row[j]);
+    }
+    return *this;
+}
+
 size_t Matrix::rows() const {
     return n_rows;
 }
@@ -93,7 +102,7 @@ void Matrix::swap(Matrix& other) noexcept {
     std::swap(matrix, other.matrix);
 }
 
-Matrix Matrix::apply_op(const Matrix& other, const std::function<float(const float&, const float&)>& op) const {
+Matrix Matrix::apply_op(const Matrix& other, const FFtoF& op) const {
     if (n_rows != other.n_rows || n_cols != other.n_cols)
         throw std::invalid_argument("dimentional inconsistency in applied matrix operation");
     Matrix result = Matrix(n_rows, n_cols);
@@ -103,6 +112,17 @@ Matrix Matrix::apply_op(const Matrix& other, const std::function<float(const flo
         float* result_row = result.matrix[i].data();
         for (size_t j{}; j < n_cols; ++j)
             result_row[j] = op(this_row[j], other_row[j]);
+    }
+    return result;
+}
+
+Matrix operator*(float a, const Matrix& matrix) {
+    Matrix result(matrix.n_rows, matrix.n_cols);
+    for (size_t i{}; i < matrix.n_rows; ++i) {
+        const float* matrix_row = matrix.data()[i].data();
+        float* result_row = result.data()[i].data();
+        for (size_t j{}; j < matrix.n_cols; ++j)
+            result_row[j] = a * matrix_row[j];
     }
     return result;
 }

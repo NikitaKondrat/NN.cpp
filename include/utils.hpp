@@ -4,6 +4,10 @@
 #include "matrix.hpp"
 #include <functional>
 #include <string>
+#include <random>
+#include <vector>
+
+using Data = std::vector<std::pair<Vector, Vector>>;
 
 float id(float);
 float id_deriv(float);
@@ -13,7 +17,9 @@ float sigmoid_deriv(float);
 
 Vector mse_lp(const Vector&, const Vector&);
 
-Vector data_to_vector(const std::string&);
+FtoF random_uniform_filler(float, float);
+
+Data parse_data(const std::string&);
 
 class Activation {
 public:
@@ -27,13 +33,14 @@ public:
 class Layer {
 private:
     Vector z_;
-    Activation activ_;
+    Activation activation_;
 public:
     Layer();
     void set_z(const Vector&);
     void set_z(Vector&&);
-    Activation& activ();
+    Activation& activation();
     const Vector& z() const;
+    Vector az() const;
     Vector gz() const;
 };
 
@@ -49,4 +56,6 @@ public:
     void set_b(Vector&&);
     const Matrix& w() const;
     const Vector& b() const;
+    Matrix& w();
+    Vector& b();
 };

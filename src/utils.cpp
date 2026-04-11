@@ -29,25 +29,37 @@ Vector mse_lp(const Vector& est, const Vector& corr) {
     return result;
 }
 
-Vector data_to_vector(const std::string& path) {
+Data parse_data(const std::string& path) {
     std::ifstream file(path);
+    size_t dataset_size;
+    size_t test_size;
+    size_t ans_size;
+    if (file.is_open()) {
+        file >> dataset_size;
+        file >> test_size;
+        file >> ans_size;
+    } else
+        throw std::runtime_error("couldn't open file");
 
-    size_t size;
-    if (file.is_open())
-        file >> size;
-
-    if (size == 0)
-        throw std::invalid_argument("size of vector cannot be less than one");
-    
-    Vector data(size);
-    size_t counter{};
-    while ((file >> data[counter]) && (++counter != size)) {}
-    
-    if (counter != size)
-        throw std::logic_error("not enough arguments for vector");
+    Data dataset(dataset_size);
+    Vector test_data(test_size);
+    Vector test_ans(ans_size);
+    for (size_t i{}; i < dataset_size; ++i) {
+        for (size_t j{}; j < test_size; ++j)
+            file >> test_data[j];
+        for (size_t j{}; j < ans_size; ++j)
+            file >> test_ans[j];
+        dataset[i] = {test_data, test_ans};
+    }
 
     file.close();
-    return data;
+    return dataset;
+}
+
+FtoF random_uniform_filler(float a, float b) {
+    static std::mt19937 gen(std::random_device{}());
+    std::uniform_real_distribution<float> dist(a, b);
+    return [dist](float) mutable -> float { return dist(gen); };
 }
 
 Activation::Activation() : activ(id), activ_deriv(id_deriv) { }
@@ -56,7 +68,7 @@ Activation::Activation(const FtoF& activ, const FtoF& activ_deriv) : activ(activ
 
 Activation::Activation(const Activation& activ) : activ(activ.activ), activ_deriv(activ.activ_deriv) { }
 
-Layer::Layer() : z_(Vector()), activ_(Activation()) { }
+Layer::Layer() : z_(Vector()), activation_(Activation()) { }
 
 void Layer::set_z(const Vector& z) {
     z_ = z;
@@ -66,16 +78,20 @@ void Layer::set_z(Vector&& z) {
     z_ = std::move(z);
 }
 
-Activation& Layer::activ() {
-    return activ_;
+Activation& Layer::activation() {
+    return activation_;
 }
 
 const Vector& Layer::z() const {
     return z_;
 }
 
+Vector Layer::az() const {
+    return z_.map(activation_.activ);
+}
+
 Vector Layer::gz() const {
-    return z_.map(activ_.activ_deriv);
+    return z_.map(activation_.activ_deriv);
 }
 
 Weight::Weight() : w_(Matrix()), b_(Vector()) { }
@@ -101,5 +117,13 @@ const Matrix& Weight::w() const {
 }
 
 const Vector& Weight::b() const {
+    return b_;
+}
+
+Matrix& Weight::w() {
+    return w_;
+}
+
+Vector& Weight::b() {
     return b_;
 }

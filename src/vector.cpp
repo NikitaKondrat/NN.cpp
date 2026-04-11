@@ -78,7 +78,7 @@ void Vector::swap(Vector& other) noexcept {
     std::swap(values, other.values);
 }
 
-Vector Vector::apply_op(const Vector& other, const std::function<float(const float&, const float&)>& op) const {
+Vector Vector::apply_op(const Vector& other, const FFtoF& op) const {
     if (n != other.n) 
         throw std::invalid_argument("same-dimensional vectors required for applied vector operation");
     Vector result(n);
@@ -100,6 +100,16 @@ Vector Vector::map(const FtoF& func) const {
     return result;
 }
 
+Vector operator*(float a, const Vector& v) {
+    Vector result(v.n);
+    for (size_t i{}; i < v.n; ++i) {
+        const float* v_values = v.data();
+        float* result_values = result.data();
+        result_values[i] = a * v_values[i];
+    }
+    return result;
+}
+
 Vector hadamar(const Vector& u, const Vector& v) {
     if (u.size() != v.size()) 
         throw std::invalid_argument("same-dimensional vectors required for hadamar multiplication");
@@ -112,10 +122,10 @@ Vector hadamar(const Vector& u, const Vector& v) {
     return result;
 }
 
-float op::add(const float& x, const float& y) {
+float op::add(float x, float y) {
     return x + y;
 }
 
-float op::sub(const float& x, const float& y) {
+float op::sub(float x, float y) {
     return x - y;
 }
