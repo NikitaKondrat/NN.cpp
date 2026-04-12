@@ -25,11 +25,8 @@ public:
     const float& operator[](size_t) const;
     float& operator[](size_t);
     Vector operator+(const Vector&) const;
-    Vector& operator+=(const Vector&);
     Vector operator-(const Vector&) const;
-    Vector& operator-=(const Vector&);
     friend Vector operator*(float, const Vector&);
-    Vector& apply(const FtoF&);
     Vector map(const FtoF&) const;
     size_t size() const;
     float* data();

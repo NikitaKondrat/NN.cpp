@@ -45,20 +45,8 @@ Vector Vector::operator+(const Vector& other) const {
     return apply_op(other, op::add);
 }
 
-Vector& Vector::operator+=(const Vector& other) {
-    Vector result = apply_op(other, op::add);
-    swap(result);
-    return *this;
-}
-
 Vector Vector::operator-(const Vector& other) const {
     return apply_op(other, op::sub);
-}
-
-Vector& Vector::operator-=(const Vector& other) {
-    Vector result = apply_op(other, op::sub);
-    swap(result);
-    return *this;
 }
 
 size_t Vector::size() const {
@@ -85,12 +73,6 @@ Vector Vector::apply_op(const Vector& other, const FFtoF& op) const {
     for (size_t i{}; i < n; ++i)
         result.values[i] = op(values[i], other.values[i]);
     return result;
-}
-
-Vector& Vector::apply(const FtoF& func) {
-    for (size_t i{}; i < n; ++i)
-        values[i] = func(values[i]);
-    return *this;
 }
 
 Vector Vector::map(const FtoF& func) const {

@@ -25,10 +25,9 @@ public:
     const Row& operator[](size_t) const;
     Row& operator[](size_t);
     Matrix operator-(const Matrix&) const;
-    Matrix& operator-=(const Matrix&);
     Vector operator*(const Vector&) const;
     friend Matrix operator*(float, const Matrix&);
-    Matrix& apply(const FtoF&);
+    Matrix map(const FtoF&) const;
     size_t rows() const;
     size_t cols() const;
     Row* data();

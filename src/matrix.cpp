@@ -49,12 +49,6 @@ Matrix Matrix::operator-(const Matrix& other) const {
     return apply_op(other, op::sub);
 }
 
-Matrix& Matrix::operator-=(const Matrix& other) {
-    Matrix result = apply_op(other, op::sub);
-    swap(result);
-    return *this;
-}
-
 Vector Matrix::operator*(const Vector& v) const {
     if (v.size() != n_cols)
         throw std::invalid_argument("dimentional inconsistency in matrix-vector multiplication");
@@ -71,13 +65,15 @@ Vector Matrix::operator*(const Vector& v) const {
     return result;
 }
 
-Matrix& Matrix::apply(const FtoF& func) {
+Matrix Matrix::map(const FtoF& func) const {
+    Matrix result(n_rows, n_cols);
     for (size_t i{}; i < n_rows; ++i) {
-        float* row = matrix[i].data();
+        const float* row = matrix[i].data();
+        float* result_row = result[i].data();
         for (size_t j{}; j < n_cols; ++j)
-            row[j] = func(row[j]);
+            result_row[j] = func(row[j]);
     }
-    return *this;
+    return result;
 }
 
 size_t Matrix::rows() const {

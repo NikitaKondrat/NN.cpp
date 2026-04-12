@@ -24,8 +24,6 @@ Network::Network(
         weights[i].set_w(Matrix(l_size, l_size));
     weights[0].set_w(Matrix(l_size, in_size));
     weights[n_layers - 2].set_w(Matrix(out_size, l_size));
-
-    fill_weights(random_uniform_filler(-1.0f, 1.0f));
 }
 
 Network::~Network() {
@@ -34,17 +32,10 @@ Network::~Network() {
     delete[] grads;
 }
 
-void Network::fill_with_path(const std::string& path) {
-    data = parse_data(path);
-}
-
-void Network::fill_with_dataset(const Data& dataset) {
-    data = dataset;
-}
-
-void Network::fill_weights(const FtoF& func) {
-    for (size_t i{}; i < n_layers - 1; ++i) 
-        weights[i].w().apply(func);
+void Network::vend_data(size_t idx) {
+    const Data& test = dv->fetch(idx);
+    layers[0].set_z(test.first);
+    y = test.second;
 }
 
 void Network::propagate() {
@@ -52,8 +43,8 @@ void Network::propagate() {
         const Weight& weight = weights[i];
         Vector z = weight.w() * layers[i].az();
         const Vector& b = weight.b();
-        if (with_bias)
-            z += weight.b();
+        if (wb)
+            z = z + weight.b();
         layers[i + 1].set_z(z);
     }
 }
@@ -69,7 +60,7 @@ void Network::backpropagate() {
     dl_dz = hadamar(dl_dL, dL_dz);
 
     grads[k - 1].set_w(outer_product(dl_dz, L_p.az()));
-    if (with_bias)
+    if (wb)
         grads[k - 1].set_b(dl_dz);
 
     for (k = n_layers - 2; k > 0; --k) {
@@ -81,27 +72,26 @@ void Network::backpropagate() {
         dl_dz = hadamar(dl_dL, dL_dz);
 
         grads[k - 1].set_w(outer_product(dl_dz, L_p.az()));
-        if (with_bias)
+        if (wb)
             grads[k - 1].set_b(dl_dz);
     }
 }
 
-void Network::apply_grads(float rate) {
+void Network::apply_grads() {
     for (size_t i{}; i < n_layers - 1; ++i) {
-        weights[i].w() -= rate * grads[i].w();
-        if (with_bias)
-            weights[i].b() -= rate * grads[i].b();
+        weights[i].set_w(weights[i].w() - lr * grads[i].w());
+        if (wb)
+            weights[i].set_b(weights[i].b() - lr * grads[i].b());
     }
 }
 
 void Network::epochs(size_t epochs) {
-    for (size_t i{}; i < epochs; ++i) 
-        for (const auto& test : data) {
-            layers[0].set_z(test.first);
-            y = test.second;
+    for (size_t i{}; i < epochs; ++i)
+        for (size_t j{}; j < dv->ds_size(); ++j) {
+            vend_data(j);
             propagate();
             backpropagate();
-            apply_grads(lr);
+            apply_grads();
         }
 }
 
@@ -121,8 +111,19 @@ Network& Network::set_lr(float lr) {
     return *this;
 }
 
-Network& Network::set_with_bias(bool with_bias) {
-    this->with_bias = with_bias;
+Network& Network::set_wb(bool wb) {
+    this->wb = wb;
+    return *this;
+}
+
+Network& Network::set_dv(DataVendor* dv) {
+    this->dv = dv;
+    return *this;
+}
+
+Network& Network::fill_weights(const FtoF& func) {
+    for (size_t i{}; i < n_layers - 1; ++i) 
+        weights[i].set_w(weights[i].w().map(func));
     return *this;
 }
 
