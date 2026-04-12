@@ -4,6 +4,7 @@
 #include "matrix.hpp"
 #include <functional>
 #include <string>
+#include <fstream>
 
 float id(float);
 float id_deriv(float);
@@ -49,4 +50,19 @@ public:
     void set_b(Vector&&);
     const Matrix& w() const;
     const Vector& b() const;
+};
+
+class Logger {
+public:
+    explicit Logger(const std::string& filename = "training.txt");
+    ~Logger();
+
+    Logger(const Logger&) = delete;
+    Logger& operator=(const Logger&) = delete;
+
+    void log(const std::string& message);
+    void flush();
+
+private:
+    std::ofstream file_;
 };

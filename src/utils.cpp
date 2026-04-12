@@ -2,6 +2,9 @@
 #include <cmath>
 #include <stdexcept>
 #include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <iostream>
 
 float id(float x) {
     return x;
@@ -102,4 +105,27 @@ const Matrix& Weight::w() const {
 
 const Vector& Weight::b() const {
     return b_;
+}
+
+Logger::Logger(const std::string& filename) {
+    file_.open(filename, std::ios::app);
+    if (!file_.is_open()) {
+        std::cerr << "[Ошибка] Не удалось открыть файл лога: " << filename << "\n";
+    }
+}
+
+Logger::~Logger() {
+    flush();
+}
+
+void Logger::log(const std::string& message) {
+    if (file_.is_open()) {
+        file_ << message << std::endl;
+    }
+}
+
+void Logger::flush() {
+    if (file_.is_open()) {
+        file_.flush();
+    }
 }
