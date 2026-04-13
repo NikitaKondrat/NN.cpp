@@ -49,12 +49,6 @@ Matrix Matrix::operator-(const Matrix& other) const {
     return apply_op(other, op::sub);
 }
 
-Matrix& Matrix::operator-=(const Matrix& other) {
-    Matrix result = apply_op(other, op::sub);
-    swap(result);
-    return *this;
-}
-
 Vector Matrix::operator*(const Vector& v) const {
     if (v.size() != n_cols)
         throw std::invalid_argument("dimentional inconsistency in matrix-vector multiplication");
@@ -67,6 +61,17 @@ Vector Matrix::operator*(const Vector& v) const {
         for (size_t j{}; j < n_cols; ++j)
             result_i += row[j] * v_values[j];
         result_values[i] = result_i;
+    }
+    return result;
+}
+
+Matrix Matrix::map(const FtoF& func) const {
+    Matrix result(n_rows, n_cols);
+    for (size_t i{}; i < n_rows; ++i) {
+        const float* row = matrix[i].data();
+        float* result_row = result[i].data();
+        for (size_t j{}; j < n_cols; ++j)
+            result_row[j] = func(row[j]);
     }
     return result;
 }
@@ -93,7 +98,7 @@ void Matrix::swap(Matrix& other) noexcept {
     std::swap(matrix, other.matrix);
 }
 
-Matrix Matrix::apply_op(const Matrix& other, const std::function<float(const float&, const float&)>& op) const {
+Matrix Matrix::apply_op(const Matrix& other, const FFtoF& op) const {
     if (n_rows != other.n_rows || n_cols != other.n_cols)
         throw std::invalid_argument("dimentional inconsistency in applied matrix operation");
     Matrix result = Matrix(n_rows, n_cols);
@@ -103,6 +108,17 @@ Matrix Matrix::apply_op(const Matrix& other, const std::function<float(const flo
         float* result_row = result.matrix[i].data();
         for (size_t j{}; j < n_cols; ++j)
             result_row[j] = op(this_row[j], other_row[j]);
+    }
+    return result;
+}
+
+Matrix operator*(float a, const Matrix& matrix) {
+    Matrix result(matrix.n_rows, matrix.n_cols);
+    for (size_t i{}; i < matrix.n_rows; ++i) {
+        const float* matrix_row = matrix.data()[i].data();
+        float* result_row = result.data()[i].data();
+        for (size_t j{}; j < matrix.n_cols; ++j)
+            result_row[j] = a * matrix_row[j];
     }
     return result;
 }

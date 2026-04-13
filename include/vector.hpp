@@ -4,7 +4,8 @@
 #include <initializer_list>
 #include <functional>
 
-using FtoF = std::function<float(const float&)>;
+using FtoF = std::function<float(float)>;
+using FFtoF = std::function<float(float, float)>;
 
 class Vector {
 private:
@@ -12,7 +13,7 @@ private:
     float* values;
     Vector(size_t, float*);
     void swap(Vector&) noexcept;
-    Vector apply_op(const Vector&, const std::function<float(const float&, const float&)>&) const;
+    Vector apply_op(const Vector&, const FFtoF&) const;
 public:
     Vector();
     Vector(size_t);
@@ -24,10 +25,8 @@ public:
     const float& operator[](size_t) const;
     float& operator[](size_t);
     Vector operator+(const Vector&) const;
-    Vector& operator+=(const Vector&);
     Vector operator-(const Vector&) const;
-    Vector& operator-=(const Vector&);
-    Vector& apply(const FtoF&);
+    friend Vector operator*(float, const Vector&);
     Vector map(const FtoF&) const;
     size_t size() const;
     float* data();
@@ -37,6 +36,6 @@ public:
 Vector hadamar(const Vector&, const Vector&);
 
 namespace op {
-    float add(const float& x, const float& y);
-    float sub(const float& x, const float& y);
+    float add(float x, float y);
+    float sub(float x, float y);
 }

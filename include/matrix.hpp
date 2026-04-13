@@ -13,7 +13,7 @@ private:
     Row* matrix;
     Matrix(size_t, size_t, Row*);
     void swap(Matrix&) noexcept;
-    Matrix apply_op(const Matrix&, const std::function<float(const float&, const float&)>&) const;
+    Matrix apply_op(const Matrix&, const FFtoF&) const;
 public:
     Matrix();
     Matrix(size_t, size_t);
@@ -25,8 +25,9 @@ public:
     const Row& operator[](size_t) const;
     Row& operator[](size_t);
     Matrix operator-(const Matrix&) const;
-    Matrix& operator-=(const Matrix&);
     Vector operator*(const Vector&) const;
+    friend Matrix operator*(float, const Matrix&);
+    Matrix map(const FtoF&) const;
     size_t rows() const;
     size_t cols() const;
     Row* data();

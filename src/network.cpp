@@ -1,12 +1,16 @@
 #include "network.hpp"
 #include <stdexcept>
 #include <fstream>
+#include <algorithm>
+#include <numeric>
+#include <iostream>
 
 Network::Network(
     size_t n_layers, size_t l_size, 
     size_t in_size, size_t out_size
 ) {
     this->n_layers = n_layers;
+    
     grads = new Weight[n_layers - 1];
 
     layers = new Layer[n_layers];
@@ -28,66 +32,104 @@ Network::~Network() {
     delete[] grads;
 }
 
-void Network::fill_from_path(std::string path) {
-    std::ifstream in(path);
-    if (!in.is_open())
-        throw std::runtime_error("couldn't open file");
-
-    size_t in_size = layers[0].z().size();
-    Vector in_data(in_size);
-    for (size_t i = 0; i < in_size; ++i)
-        in >> in_data[i];
-    layers[0].set_z(std::move(in_data));
-
-    size_t out_size = layers[n_layers - 1].z().size();
-    for (size_t i = 0; i < out_size; ++i)
-        in >> out[i];
-
-    in.close();
+void Network::vend_data(size_t idx) {
+    const Data& test = dv->fetch(idx);
+    layers[0].set_z(test.first);
+    y = test.second;
 }
 
-void Network::propagate(bool with_bias = false) {
+void Network::propagate() {
     for (size_t i{}; i < n_layers - 1; ++i) {
         const Weight& weight = weights[i];
-        Vector z = weight.w() * layers[i].gz();
+        Vector z = weight.w() * layers[i].az();
         const Vector& b = weight.b();
-        if (with_bias)
-            z += weight.b();
+        if (wb)
+            z = z + weight.b();
         layers[i + 1].set_z(z);
     }
 }
 
-void Network::backpropagate(bool with_out_activ = true) {
+void Network::backpropagate() {
     size_t k = n_layers - 1;
     Layer& L = layers[k];
     Layer& L_p = layers[k - 1];
 
     Vector dl_dL, dL_dz, dl_dz;
-    if (with_out_activ) {
-        dl_dL = lp(L.gz(), out);
-        dL_dz = L.z().map(L.activ().activ_deriv);
-        dl_dz = hadamar(dl_dL, dL_dz);
-    } else
-        dl_dz = lp(L.gz(), out);
+    dl_dL = lp(L.az(), y);
+    dL_dz = L.gz();
+    dl_dz = hadamar(dl_dL, dL_dz);
 
-    grads[k - 1].set_w(outer_product(dl_dz, L_p.gz()));
-    grads[k - 1].set_b(dl_dz);
+    grads[k - 1].set_w(outer_product(dl_dz, L_p.az()));
+    if (wb)
+        grads[k - 1].set_b(dl_dz);
 
     for (k = n_layers - 2; k > 0; --k) {
-        L = layers[k];
-        L_p = layers[k - 1];
+        Layer& L = layers[k];
+        Layer& L_p = layers[k - 1];
 
         dl_dL = dl_dz * weights[k].w();
-        dL_dz = L.z().map(L.activ().activ_deriv);
+        dL_dz = L.gz();
         dl_dz = hadamar(dl_dL, dL_dz);
 
-        grads[k - 1].set_w(outer_product(dl_dz, L_p.gz()));
-        grads[k - 1].set_b(dl_dz);
+        grads[k - 1].set_w(outer_product(dl_dz, L_p.az()));
+        if (wb)
+            grads[k - 1].set_b(dl_dz);
     }
 }
 
-void Network::set_lp(const Loss& lp) {
+void Network::apply_grads() {
+    for (size_t i{}; i < n_layers - 1; ++i) {
+        weights[i].set_w(weights[i].w() - lr * grads[i].w());
+        if (wb)
+            weights[i].set_b(weights[i].b() - lr * grads[i].b());
+    }
+}
+
+void Network::epochs(size_t epochs) {
+    for (size_t i{}; i < epochs; ++i)
+        for (size_t j{}; j < dv->ds_size(); ++j) {
+            vend_data(j);
+            propagate();
+            backpropagate();
+            apply_grads();
+        }
+}
+
+Vector Network::compute(const Vector& v) {
+    layers[0].set_z(v);
+    propagate();
+    return layers[n_layers - 1].az();
+}
+
+Network& Network::set_lp(const Loss& lp) {
     this->lp = lp;
+    return *this;
+}
+
+Network& Network::set_lr(float lr) {
+    this->lr = lr;
+    return *this;
+}
+
+Network& Network::set_wb(bool wb) {
+    this->wb = wb;
+    return *this;
+}
+
+Network& Network::set_dv(DataVendor* dv) {
+    this->dv = dv;
+    return *this;
+}
+
+Network& Network::fill_weights(const FtoF& func) {
+    for (size_t i{}; i < n_layers - 1; ++i) 
+        weights[i].set_w(weights[i].w().map(func));
+    return *this;
+}
+
+Network& Network::set_layer_activation(size_t idx, const Activation& activation) {
+    get_layer(idx).activation() = activation;
+    return *this;
 }
 
 Layer& Network::get_layer(size_t idx) {
