@@ -129,3 +129,33 @@ void Logger::flush() {
         file_.flush();
     }
 }
+
+NetworkLogger::NetworkLogger(const std::string& filename) : Logger(filename) {}
+
+void NetworkLogger::log_vector(const std::string& name, const Vector& vec) {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(4);
+    oss << name << " = [";
+    for (size_t i = 0; i < vec.size(); ++i) {
+        oss << vec[i];
+        if (i != vec.size() - 1) oss << ", ";
+    }
+    oss << "]";
+    log(oss.str());
+}
+
+void NetworkLogger::log_matrix(const std::string& name, const Matrix& mat) {
+    log(name + " = [");
+    for (size_t i = 0; i < mat.rows(); ++i) {
+        std::ostringstream row_oss;
+        row_oss << std::fixed << std::setprecision(4) << "  [";
+        const auto& row = mat[i];
+        for (size_t j = 0; j < mat.cols(); ++j) {
+            row_oss << row[j];
+            if (j != mat.cols() - 1) row_oss << ", ";
+        }
+        row_oss << "]";
+        log(row_oss.str());
+    }
+    log("]");
+}
