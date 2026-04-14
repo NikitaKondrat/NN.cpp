@@ -50,127 +50,9 @@ Vector cce_lp(const Vector& est, const Vector& ans);
 /** @} */
 
 /**
- * @brief Provider of a filler function for weights initialization in a neural network.
- * @note Uses a static Mersenne Twister generator.
- * @param a Lower bound of the distribution.
- * @param b Upper bound of the distribution.
- * @return Filler function.
- */
-FtoF random_uniform_filler(float a, float b);
-
-/**
- * @brief Base class for all resource vendors.
- * 
- * Vendors provide external resources (data, weights, etc.) to a neural network,
- * separating resource acquisition from core training logic.
- */
-class Vendor {
-protected:
-    size_t count_ = 0; // number of items provided by vendor
-public:
-    Vendor() = default;
-    virtual ~Vendor() = default;
-    Vendor(const Vendor&) = delete;
-    Vendor& operator=(const Vendor&) = delete;  
-    virtual size_t count() const;
-};
-
-/**
- * @brief Base class for neural network data providers.
- * @note This class itself is not used to construct instances of data providers,
- *       use derived classes instead. All restrictions, however, MUST be observed in every derived class.
- * @warning When used with a neural network:
- *          - `in_size_` MUST be equal to the input layer size (`layers[0].z().size()`)
- *          - `out_size_` MUST be equal to the target vector size (`y.size()`)
- */
-class DataVendor : public Vendor {
-protected:
-    size_t in_size_ = 0;   // input vector size
-    size_t out_size_ = 0;  // target vector size
-    Data* data = nullptr;  // stored data
-public:
-    DataVendor() = default;
-    virtual ~DataVendor();
-    DataVendor(const DataVendor&) = delete;
-    DataVendor& operator=(const DataVendor&) = delete;  
-
-    /**
-     * @brief Fetches a single sample from the dataset.
-     * @warning If `idx` >= `ds_size_` it is an UB.
-     * @param idx Zero-based index of the data sample to fetch from `data`.
-     * @return Constant reference of a `std::pair<Data>` instance, where
-     *         - first item is input vector data
-     *         - second item is target vector data
-     */
-    const Data& fetch(size_t idx) const;
-
-    /**
-     * @brief Dataset size getter.
-     * @return Dataset size.
-     */
-    size_t count() const override;
-
-    /**
-     * @brief Input vector size getter.
-     * @return Input vector size.
-     */
-    
-    size_t in_size() const;
-
-    /**
-     * @brief Target vector size getter.
-     * @return Target vector size. 
-     */
-    size_t out_size() const;
-};
-
-/**
- * @brief Class of a data provider that loads data from file.
- */
-class FileDataVendor : public DataVendor {
-public:
-    FileDataVendor(const std::string& path);
-};
-
-/**
- * @brief Class of a data provider that stores data copied from an initializer list.
- */
-class ObjectDataVendor : public DataVendor {
-public:
-    ObjectDataVendor(std::initializer_list<Data> l);
-};
-
-/**
- * @brief Base class for weights providers in a neural network.
- */
-class WeightVendor : public Vendor {
-protected:
-    size_t with_bias_;
-    Matrix* weight_matrices = nullptr;
-    Vector* biases = nullptr;
-};
-
-/**
- * @brief Class of a weight provider that loads data from file.
- */
-class FileWeightVendor : public WeightVendor {
-public:
-    FileWeightVendor(const std::string&);
-};
-
-/**
- * @brief Class of a weight provider that stores data copied from an initializer list.
- */
-class ObjectWeightVendor : public WeightVendor {
-public:
-    ObjectWeightVendor(std::initializer_list<Matrix> l);
-    ObjectWeightVendor(std::initializer_list<std::pair<Matrix, Vector>> l);
-};
-
-/**
  * @brief Wrapper class for activation function and its derivative.
- * 
- * Instances of this class are used to configure activation behavior 
+ *
+ * Instances of this class are used to configure activation behavior
  * for layers in a neural network.
  */
 class Activation {
@@ -268,4 +150,176 @@ public:
      * @return Bias vector as a const reference.
      */
     const Vector& b() const;
+};
+
+/**
+ * @brief Base abstract class for all resource vendors.
+ * 
+ * Vendors provide external resources (data, weights, etc.) to a neural network,
+ * separating resource acquisition from core training logic.
+ */
+template<typename T>
+class Vendor {
+protected:
+    size_t count_ = 0; // number of items provided by vendor
+public:
+    Vendor() = default;
+    virtual ~Vendor() = default;
+    Vendor(const Vendor&) = delete;
+    Vendor& operator=(const Vendor&) = delete;
+
+    /**
+     * @brief Fetches a single item.
+     * @warning If `idx` >= `count_` it is an UB.
+     * @param idx Zero-based index of the item.
+     * @return Constant reference to the requested item.
+     */
+    virtual const T& fetch(size_t idx) = 0;
+
+    /**
+     * @brief Number of stored items getter.
+     * @return Number of stored items.
+     */
+    size_t count() const {
+        return count_;
+    };
+};
+
+/**
+ * @brief Base class for neural network data providers.
+ * @note This class itself is not used to construct instances of data providers,
+ *       use derived classes instead. All restrictions, however, MUST be observed in every derived class.
+ * @warning When used with a neural network:
+ *          - `in_size_` MUST be equal to the input layer size (`layers[0].z().size()`)
+ *          - `out_size_` MUST be equal to the target vector size (`y.size()`)
+ */
+class DataVendor : public Vendor<Data> {
+protected:
+    size_t in_size_ = 0;   // input vector size
+    size_t out_size_ = 0;  // target vector size
+    Data* data = nullptr;  // stored data
+                           // `count_` for this class means dataset size
+    DataVendor() = default;
+    virtual ~DataVendor();
+public:
+    DataVendor(const DataVendor&) = delete;
+    DataVendor& operator=(const DataVendor&) = delete;  
+
+    /**
+     * @brief Fetches a single sample from the dataset.
+     * @warning If `idx` >= `count_` it is an UB.
+     * @param idx Zero-based index of the data sample to fetch from `data`.
+     * @return Constant reference of a `std::pair<Data>` instance, where
+     *         - first item is input vector data
+     *         - second item is target vector data
+     */
+    virtual const Data& fetch(size_t idx) override;
+
+    /**
+     * @brief Input vector size getter.
+     * @return Input vector size.
+     */
+    
+    size_t in_size() const;
+
+    /**
+     * @brief Target vector size getter.
+     * @return Target vector size. 
+     */
+    size_t out_size() const;
+};
+
+/**
+ * @brief Class of a data provider that loads data from file.
+ */
+class FileDataVendor : public DataVendor {
+public:
+    FileDataVendor(const std::string& path);
+};
+
+/**
+ * @brief Class of a data provider that stores data copied from an initializer list.
+ */
+class ObjectDataVendor : public DataVendor {
+public:
+    ObjectDataVendor(std::initializer_list<Data> l);
+};
+
+/**
+ * @brief Base class for neural network weights providers.
+ * @note This class itself is not used to construct instances of weights providers,
+ *       use derived classes instead. All restrictions, however, MUST be observed in every derived class.
+ * @warning When used with a neural network:
+ *          - `count_` MUST be equal to the number of weights in a neural network (`n_layers - 1`)
+ *          - `with_bias_` MUST correspond with bias usage in a neural network (`wb`)
+ *          - `weights[i].w().size()` MUST be equal to the corresponding weight matrix in a neural network
+ *          - `weights[i].b().size()` MUST be equal to the corresponding bias in a neural network
+ */
+class WeightVendor : public Vendor<Weight> { 
+protected:
+    bool with_bias_ = false;           // use bias flag
+    Weight* weights = nullptr;           // stored weight matrices and biases
+    WeightVendor() = default;  
+    virtual ~WeightVendor();
+public:
+    WeightVendor(const WeightVendor&) = delete;
+    WeightVendor& operator=(const WeightVendor&) = delete;
+    
+    /**
+     * @brief Fetches a single weight from the stored weights.
+     * @warning If `idx` >= `count_` it is an UB.
+     * @param idx Zero-based index of the weight to fetch from `weights`.
+     * @return Constant reference of a `Weight` instance
+     */
+    virtual const Weight& fetch(size_t idx) override;
+};
+
+/**
+ * @brief Class of a weight provider that loads data from file.
+ */
+class FileWeightVendor : public WeightVendor {
+public:
+    FileWeightVendor(const std::string& path);
+};
+
+/**
+ * @brief Class of a weight provider that stores data copied from an initializer list.
+ */
+class ObjectWeightVendor : public WeightVendor {
+public:
+    ObjectWeightVendor(std::initializer_list<Matrix> l);
+    ObjectWeightVendor(std::initializer_list<std::pair<Matrix, Vector>> l);
+};
+
+/**
+ * @brief Provider of a filler function for weights initialization in a neural network.
+ * 
+ * @param a Lower bound of the distribution.
+ * @param b Upper bound of the distribution.
+ * @return Filler function.
+ */
+
+/**
+ * @brief Class of a weight provider that gives random weights.
+ * @note Uses a Mersenne Twister generator to make weights.
+ */
+class RandomWeightVendor : public WeightVendor {
+private:
+    std::mt19937 gen;
+    std::uniform_real_distribution<float> dist;
+public:
+    /**
+     * @brief Constructor.
+     * @param n_layers Number of layers in a neural network.
+     * @param l_size Size of the hidden layer in a neural network.
+     * @param in_size Size of the input layer in a neural network.
+     * @param out_size Size of the output layer in a neural network.
+     * @param with_bias Use bias flag, default = `false`.
+     * @param a Lower bound of the distribution, default = `-1.0f`.
+     * @param b Upper bound of the distribution, default = `1.0f`.
+     */
+    RandomWeightVendor(
+        size_t n_layers, size_t l_size, size_t in_size, size_t out_size, bool with_bias = false,
+        float a = -1.0f, float b = 1.0f
+    );
 };

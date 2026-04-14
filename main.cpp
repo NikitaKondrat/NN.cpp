@@ -2,15 +2,17 @@
 #include <string>
 #include "network.hpp"
 
-void train_bool_op(const std::string& s, DataVendor* dv) {
+void train_bool_op(const std::string& s, DataVendor& dv) {
     size_t n_layers = 4;
     size_t l_size = 3;
     size_t in_size = 2;
     size_t out_size = 1;
-    size_t epochs = 100'000;
+    size_t epochs = 1'000'000;
+
+    RandomWeightVendor wv(n_layers, l_size, in_size, out_size);
 
     Network nw(n_layers, l_size, in_size, out_size);
-    nw.fill_weights(random_uniform_filler(-1.0f, 1.0f)).set_dv(dv);
+    nw.fill_weights(&wv).set_dv(&dv);
 
     Activation activation(sigmoid, sigmoid_deriv);
     for (size_t i{1}; i < n_layers; ++i) 
@@ -18,9 +20,9 @@ void train_bool_op(const std::string& s, DataVendor* dv) {
 
     nw.epochs(epochs);
 
-    Vector est(dv->ds_size());
-    for (size_t i{}; i < dv->ds_size(); ++i)
-        est[i] = nw.compute(dv->fetch(i).first)[0];
+    Vector est(dv.count());
+    for (size_t i{}; i < dv.count(); ++i)
+        est[i] = nw.compute(dv.fetch(i).first)[0];
 
     for (int i = 0; i <= 1; ++i)
         for (int j = 0; j <= 1; ++j)
@@ -48,7 +50,7 @@ int main() {
         {Vector{1, 1}, Vector{1}},
     };
 
-    train_bool_op("^", &xor_ds);
-    train_bool_op("&", &and_ds);
-    train_bool_op("|", &or_ds);
+    train_bool_op("^", xor_ds);
+    train_bool_op("&", and_ds);
+    train_bool_op("|", or_ds);
 }

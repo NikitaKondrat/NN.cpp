@@ -87,7 +87,7 @@ void Network::apply_grads() {
 
 void Network::epochs(size_t epochs) {
     for (size_t i{}; i < epochs; ++i)
-        for (size_t j{}; j < dv->ds_size(); ++j) {
+        for (size_t j{}; j < dv->count(); ++j) {
             vend_data(j);
             propagate();
             backpropagate();
@@ -121,9 +121,9 @@ Network& Network::set_dv(DataVendor* dv) {
     return *this;
 }
 
-Network& Network::fill_weights(const FtoF& func) {
+Network& Network::fill_weights(WeightVendor* wv) {
     for (size_t i{}; i < n_layers - 1; ++i) 
-        weights[i].set_w(weights[i].w().map(func));
+        weights[i].set_w(wv->fetch(i).w());
     return *this;
 }
 
