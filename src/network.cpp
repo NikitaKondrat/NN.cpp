@@ -14,16 +14,20 @@ Network::Network(
     grads = new Weight[n_layers - 1];
 
     layers = new Layer[n_layers];
+    layers[0].set_z(Vector(in_size));
     for (size_t i{1}; i < n_layers - 1; ++i)
         layers[i].set_z(Vector(l_size));
-    layers[0].set_z(Vector(in_size));
     layers[n_layers - 1].set_z(Vector(out_size));
 
     weights = new Weight[n_layers - 1];
-    for (size_t i{1}; i < n_layers - 2; ++i)
-        weights[i].set_w(Matrix(l_size, l_size));
     weights[0].set_w(Matrix(l_size, in_size));
+    weights[0].set_b(Vector(l_size));
+    for (size_t i{1}; i < n_layers - 2; ++i) {
+        weights[i].set_w(Matrix(l_size, l_size));
+        weights[i].set_b(Vector(l_size));
+    }
     weights[n_layers - 2].set_w(Matrix(out_size, l_size));
+    weights[n_layers - 2].set_b(Vector(out_size));
 }
 
 Network::~Network() {
@@ -45,7 +49,7 @@ void Network::propagate() {
         const Vector& b = weight.b();
         if (wb)
             z = z + weight.b();
-        layers[i + 1].set_z(z);
+        layers[i + 1].set_z(std::move(z));
     }
 }
 
@@ -96,6 +100,8 @@ void Network::epochs(size_t epochs) {
 }
 
 Vector Network::compute(const Vector& v) {
+    if (v.size() != layers[0].z().size())
+        throw std::invalid_argument("Dimentionally inconsistent vector was provided for computation");
     layers[0].set_z(v);
     propagate();
     return layers[n_layers - 1].az();
@@ -122,8 +128,23 @@ Network& Network::set_dv(DataVendor* dv) {
 }
 
 Network& Network::fill_weights(WeightVendor* wv) {
-    for (size_t i{}; i < n_layers - 1; ++i) 
-        weights[i].set_w(wv->fetch(i).w());
+    for (size_t i{}; i < n_layers - 1; ++i) {
+        const Weight& fetched_weight = wv->fetch(i);
+        Weight& weight = weights[i];
+        const Matrix& fetched_weight_matrix = fetched_weight.w();
+        const Matrix& weight_matrix = weight.w();
+
+        if (fetched_weight_matrix.rows() != weight_matrix.rows() || 
+            fetched_weight_matrix.cols() != weight_matrix.cols())
+            throw std::invalid_argument("Dimentionally inconsistent matrices occured during weights filling");
+        weight.set_w(fetched_weight_matrix);
+
+        if (wb) {
+            if (fetched_weight.b().size() != weight.b().size())
+                throw std::invalid_argument("Dimentionally inconsistent vectors occured during weights filling");
+            weight.set_b(fetched_weight.b());
+        }
+    }
     return *this;
 }
 

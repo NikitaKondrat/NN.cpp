@@ -257,8 +257,8 @@ public:
  */
 class WeightVendor : public Vendor<Weight> { 
 protected:
-    bool with_bias_ = false;           // use bias flag
-    Weight* weights = nullptr;           // stored weight matrices and biases
+    bool with_bias_ = true;           // use bias flag
+    Weight* weights = nullptr;        // stored weight matrices and biases
     WeightVendor() = default;  
     virtual ~WeightVendor();
 public:
@@ -314,12 +314,12 @@ public:
      * @param l_size Size of the hidden layer in a neural network.
      * @param in_size Size of the input layer in a neural network.
      * @param out_size Size of the output layer in a neural network.
-     * @param with_bias Use bias flag, default = `false`.
+     * @param with_bias Use bias flag, default = `true`.
      * @param a Lower bound of the distribution, default = `-1.0f`.
      * @param b Upper bound of the distribution, default = `1.0f`.
      */
     RandomWeightVendor(
-        size_t n_layers, size_t l_size, size_t in_size, size_t out_size, bool with_bias = false,
+        size_t n_layers, size_t l_size, size_t in_size, size_t out_size, bool with_bias = true,
         float a = -1.0f, float b = 1.0f
     );
 };

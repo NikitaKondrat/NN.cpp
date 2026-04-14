@@ -208,16 +208,18 @@ FileWeightVendor::FileWeightVendor(const std::string& path) {
 
 ObjectWeightVendor::ObjectWeightVendor(std::initializer_list<Matrix> l) {
     count_ = l.size();
+    with_bias_ = false;
     weights = new Weight[count_];
-    ssize_t i = 0;
+    size_t i{};
     for (const auto& weight : l)
         weights[i].set_w(weight);
 }
 
 ObjectWeightVendor::ObjectWeightVendor(std::initializer_list<std::pair<Matrix, Vector>> l) {
     count_ = l.size();
+    with_bias_ = true;
     weights = new Weight[count_];
-    size_t i = 0;
+    size_t i{};
     for (const auto& weight: l) {
         weights[i].set_w(weight.first);
         weights[i].set_b(weight.second);
