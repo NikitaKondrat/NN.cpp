@@ -1,4 +1,7 @@
 #include "utils.hpp"
+#include "vector.hpp"
+#include "matrix.hpp"
+
 #include <cmath>
 #include <stdexcept>
 #include <fstream>
@@ -114,13 +117,11 @@ Logger::Logger(const std::string& filename) {
     }
 }
 
-Logger::~Logger() {
-    flush();
-}
+Logger::~Logger() { flush(); }
 
 void Logger::log(const std::string& message) {
     if (file_.is_open()) {
-        file_ << message << std::endl;
+        file_ << message << "\n";
     }
 }
 
@@ -132,30 +133,28 @@ void Logger::flush() {
 
 NetworkLogger::NetworkLogger(const std::string& filename) : Logger(filename) {}
 
-void NetworkLogger::log_vector(const std::string& name, const Vector& vec) {
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(4);
-    oss << name << " = [";
+void NetworkLogger::log_vector(const Vector& vec) {  // УБРАЛ name
+    if (!file_.is_open()) return;
+
+    file_ << std::fixed << std::setprecision(6);
+    file_ << vec.size() << "\n";  // Сначала размерность
     for (size_t i = 0; i < vec.size(); ++i) {
-        oss << vec[i];
-        if (i != vec.size() - 1) oss << ", ";
+        file_ << vec[i];
+        if (i != vec.size() - 1) file_ << " ";
     }
-    oss << "]";
-    log(oss.str());
+    file_ << "\n";
 }
 
-void NetworkLogger::log_matrix(const std::string& name, const Matrix& mat) {
-    log(name + " = [");
+void NetworkLogger::log_matrix(const Matrix& mat) {  // УБРАЛ name
+    if (!file_.is_open()) return;
+
+    file_ << std::fixed << std::setprecision(6);
+    file_ << mat.rows() << " " << mat.cols() << "\n";
     for (size_t i = 0; i < mat.rows(); ++i) {
-        std::ostringstream row_oss;
-        row_oss << std::fixed << std::setprecision(4) << "  [";
-        const auto& row = mat[i];
         for (size_t j = 0; j < mat.cols(); ++j) {
-            row_oss << row[j];
-            if (j != mat.cols() - 1) row_oss << ", ";
+            file_ << mat[i][j];
+            if (j != mat.cols() - 1) file_ << " ";
         }
-        row_oss << "]";
-        log(row_oss.str());
+        file_ << "\n";
     }
-    log("]");
 }

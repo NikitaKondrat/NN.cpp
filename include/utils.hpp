@@ -53,7 +53,7 @@ public:
 };
 
 class Logger {
-private:
+protected:
     std::ofstream file_;
 public:
     explicit Logger(const std::string& filename = "training.txt");
@@ -70,6 +70,6 @@ class NetworkLogger : public Logger {
 public:
     explicit NetworkLogger(const std::string& filename = "network_data.txt");
 
-    void log_vector(const std::string& name, const Vector& vec);
-    void log_matrix(const std::string& name, const Matrix& mat);
+    void log_matrix(const Matrix& mat);  // УБРАЛ std::string name
+    void log_vector(const Vector& vec);  // УБРАЛ std::string name
 };
