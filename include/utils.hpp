@@ -59,30 +59,46 @@ Vector cce_lp(const Vector& est, const Vector& ans);
 FtoF random_uniform_filler(float a, float b);
 
 /**
- * @brief Base class for data providers in a neural network.
+ * @brief Base class for all resource vendors.
+ * 
+ * Vendors provide external resources (data, weights, etc.) to a neural network,
+ * separating resource acquisition from core training logic.
+ */
+class Vendor {
+protected:
+    size_t count_ = 0; // number of items provided by vendor
+public:
+    Vendor() = default;
+    virtual ~Vendor() = default;
+    Vendor(const Vendor&) = delete;
+    Vendor& operator=(const Vendor&) = delete;  
+    virtual size_t count() const;
+};
+
+/**
+ * @brief Base class for neural network data providers.
  * @note This class itself is not used to construct instances of data providers,
  *       use derived classes instead. All restrictions, however, MUST be observed in every derived class.
  * @warning When used with a neural network:
  *          - `in_size_` MUST be equal to the input layer size (`layers[0].z().size()`)
  *          - `out_size_` MUST be equal to the target vector size (`y.size()`)
  */
-class DataVendor {
+class DataVendor : public Vendor {
 protected:
-    size_t ds_size_ = 0;   // dataset size
     size_t in_size_ = 0;   // input vector size
     size_t out_size_ = 0;  // target vector size
     Data* data = nullptr;  // stored data
-    DataVendor(const DataVendor&) = delete;
-    DataVendor& operator=(const DataVendor&) = delete;  
 public:
     DataVendor() = default;
     virtual ~DataVendor();
+    DataVendor(const DataVendor&) = delete;
+    DataVendor& operator=(const DataVendor&) = delete;  
 
     /**
      * @brief Fetches a single sample from the dataset.
      * @warning If `idx` >= `ds_size_` it is an UB.
      * @param idx Zero-based index of the data sample to fetch from `data`.
-     * @return Constant reference of a `std::pair` instance, where
+     * @return Constant reference of a `std::pair<Data>` instance, where
      *         - first item is input vector data
      *         - second item is target vector data
      */
@@ -92,7 +108,7 @@ public:
      * @brief Dataset size getter.
      * @return Dataset size.
      */
-    size_t ds_size() const;
+    size_t count() const override;
 
     /**
      * @brief Input vector size getter.
@@ -102,7 +118,7 @@ public:
     size_t in_size() const;
 
     /**
-     * Target vector size getter.
+     * @brief Target vector size getter.
      * @return Target vector size. 
      */
     size_t out_size() const;
@@ -113,7 +129,7 @@ public:
  */
 class FileDataVendor : public DataVendor {
 public:
-    FileDataVendor(const std::string&);
+    FileDataVendor(const std::string& path);
 };
 
 /**
@@ -123,6 +139,12 @@ class ObjectDataVendor : public DataVendor {
 public:
     ObjectDataVendor(std::initializer_list<Data> l);
 };
+
+class WeightVendor : public Vendor { };
+
+class FileWeightVendor : public WeightVendor { };
+
+class ObjectWeightVendor : public WeightVendor { };
 
 /**
  * @brief Wrapper class for activation function and its derivative.

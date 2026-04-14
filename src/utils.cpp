@@ -77,6 +77,10 @@ FtoF random_uniform_filler(float a, float b) {
     return [dist](float) mutable -> float { return dist(gen); };
 }
 
+size_t Vendor::count() const {
+    return count_;
+}
+
 DataVendor::~DataVendor() {
     delete[] data;
     data = nullptr;
@@ -86,8 +90,8 @@ const Data& DataVendor::fetch(size_t idx) const {
     return data[idx];
 }
 
-size_t DataVendor::ds_size() const {
-    return ds_size_;
+size_t DataVendor::count() const {
+    return count_;
 }
 
 size_t DataVendor::in_size() const {
@@ -100,11 +104,11 @@ size_t DataVendor::out_size() const {
 
 FileDataVendor::FileDataVendor(const std::string& path) {
     std::ifstream ifs(path);
-    ifs >> ds_size_ >> in_size_ >> out_size_;
-    data = new Data[ds_size_];
+    ifs >> count_ >> in_size_ >> out_size_;
+    data = new Data[count_];
     Vector in(in_size_);
     Vector out(out_size_);
-    for (size_t i{}; i < ds_size_; ++i) {
+    for (size_t i{}; i < count_; ++i) {
         for (size_t j{}; j < in_size_; ++j)
             ifs >> in.data()[j];
         for (size_t j{}; j < out_size_; ++j)
@@ -114,10 +118,10 @@ FileDataVendor::FileDataVendor(const std::string& path) {
 }
 
 ObjectDataVendor::ObjectDataVendor(std::initializer_list<Data> l) {
-    ds_size_ = l.size();
+    count_ = l.size();
     in_size_ = (*l.begin()).first.size();
     out_size_ = (*l.begin()).second.size();
-    data = new Data[ds_size_];
+    data = new Data[count_];
     std::copy(l.begin(), l.end(), data);
 }
 
