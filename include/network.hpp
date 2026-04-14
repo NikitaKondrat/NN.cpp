@@ -134,11 +134,11 @@ public:
     Network& set_dv(DataVendor* dv);
 
     /** 
-     * @brief Initializes weight matrices using a provided function.
-     * @param func Function that generates values.
+     * @brief Initializes weight matrices using provided weight vendor.
+     * @param wv Weight vendor.
      * @return Reference to this instance for method chaining.
      */
-    Network& fill_weights(const FtoF& func);
+    Network& fill_weights(WeightVendor* wv);
 
     /**
      * @brief Sets the activation function and its derivative for a specific layer.
