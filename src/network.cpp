@@ -1,6 +1,7 @@
 #include "network.hpp"
 #include <stdexcept>
 #include <fstream>
+#include "utils.hpp"
 
 Network::Network(
     size_t n_layers, size_t l_size, 
@@ -20,6 +21,22 @@ Network::Network(
         weights[i].set_w(Matrix(l_size, l_size));
     weights[0].set_w(Matrix(l_size, in_size));
     weights[n_layers - 2].set_w(Matrix(out_size, l_size));
+
+    for (size_t i = 0; i < n_layers - 1; ++i) {
+        if (i == 0) {
+            grads[i].set_w(Matrix(l_size, in_size));
+            grads[i].set_b(Vector(l_size));
+        }
+        else if (i == n_layers - 2) {
+            grads[i].set_w(Matrix(out_size, l_size));
+            grads[i].set_b(Vector(out_size));
+        }
+        else {
+            grads[i].set_w(Matrix(l_size, l_size));
+            grads[i].set_b(Vector(l_size));
+        }
+    }
+
 }
 
 Network::~Network() {
@@ -100,4 +117,31 @@ Weight& Network::get_weight(size_t idx) {
     if (idx >= n_layers - 1)
         throw std::out_of_range("weight index out of range");
     return weights[idx];
+}
+
+void Network::update_weights(double lr, NetworkLogger& logger) {
+    logger.log("UPDATE");
+
+    for (size_t i = 0; i < n_layers - 1; ++i) {
+        const Matrix& grad_w = grads[i].w();
+        const Vector& grad_b = grads[i].b();
+
+        const Matrix& current_w = weights[i].w();
+        const Vector& current_b = weights[i].b();
+
+        Matrix new_w(current_w.rows(), current_w.cols());
+        for (size_t r = 0; r < current_w.rows(); ++r)
+            for (size_t c = 0; c < current_w.cols(); ++c)
+                new_w[r][c] = current_w[r][c] - lr * grad_w[r][c];
+
+        Vector new_b(current_b.size());
+        for (size_t j = 0; j < current_b.size(); ++j)
+            new_b[j] = current_b[j] - lr * grad_b[j];
+
+        weights[i].set_w(std::move(new_w));
+        weights[i].set_b(std::move(new_b));
+
+        logger.log_matrix(weights[i].w());
+        logger.log_vector(weights[i].b());
+    }
 }

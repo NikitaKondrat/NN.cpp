@@ -1,6 +1,4 @@
 #include "utils.hpp"
-#include "vector.hpp"
-#include "matrix.hpp"
 
 #include <cmath>
 #include <stdexcept>
@@ -133,11 +131,11 @@ void Logger::flush() {
 
 NetworkLogger::NetworkLogger(const std::string& filename) : Logger(filename) {}
 
-void NetworkLogger::log_vector(const Vector& vec) {  // УБРАЛ name
+void NetworkLogger::log_vector(const Vector& vec) {
     if (!file_.is_open()) return;
 
     file_ << std::fixed << std::setprecision(6);
-    file_ << vec.size() << "\n";  // Сначала размерность
+    file_ << vec.size() << "\n";
     for (size_t i = 0; i < vec.size(); ++i) {
         file_ << vec[i];
         if (i != vec.size() - 1) file_ << " ";
@@ -145,7 +143,7 @@ void NetworkLogger::log_vector(const Vector& vec) {  // УБРАЛ name
     file_ << "\n";
 }
 
-void NetworkLogger::log_matrix(const Matrix& mat) {  // УБРАЛ name
+void NetworkLogger::log_matrix(const Matrix& mat) {
     if (!file_.is_open()) return;
 
     file_ << std::fixed << std::setprecision(6);

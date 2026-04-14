@@ -23,4 +23,5 @@ public:
     void set_lp(const Loss&);
     Layer& get_layer(size_t idx);
     Weight& get_weight(size_t idx);
+    void update_weights(double lr, NetworkLogger& logger);
 };

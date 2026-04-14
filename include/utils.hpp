@@ -70,6 +70,6 @@ class NetworkLogger : public Logger {
 public:
     explicit NetworkLogger(const std::string& filename = "network_data.txt");
 
-    void log_matrix(const Matrix& mat);  // УБРАЛ std::string name
-    void log_vector(const Vector& vec);  // УБРАЛ std::string name
+    void log_matrix(const Matrix& mat);
+    void log_vector(const Vector& vec); 
 };
