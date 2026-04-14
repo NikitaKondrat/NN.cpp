@@ -10,7 +10,7 @@ using Loss = std::function<Vector(const Vector&, const Vector&)>;
 /**
  * @brief A neural network class.
  * 
- * @warning Before training (i.e. using the `epochs()` method), the neural network 
+ * @warning Before training (i.e. using the `epochs()` method), a neural network 
  *       MUST be initialized with:
  *       1. Weight matrices
  *       2. A pointer to a `DataVendor` instance
@@ -18,6 +18,9 @@ using Loss = std::function<Vector(const Vector&, const Vector&)>;
  *       This is done using the `fill_weights()` and `set_dv()` methods, respectively.
  *       Using the `random_uniform_filler()` function from `utils.hpp` for weight 
  *       initialization is recommended.
+ * 
+ *       Furthermore, if bias will not be used in the training, it MUST be set to `false`
+ *       with `set_wb()` method BEFORE filling weights of a network.
  * 
  * `layers[0]` is the input layer, `layer[n_layers - 1]` is the output layer, 
  * the target vector is stored as `y`.
@@ -30,7 +33,7 @@ using Loss = std::function<Vector(const Vector&, const Vector&)>;
  * (`set_lp()`, `set_lr()`, `set_wb()`). Default values are:
  * - `lp` = `mse_lp`
  * - `lr` = `0.1f`
- * - `wb` = `false`
+ * - `wb` = `true`
  * 
  * Activation functions (and their derivatives) can be set for each layer using 
  * the `set_layer_activation()` method.
@@ -44,7 +47,7 @@ private:
     Vector y;                  // target output vector
     Loss lp = mse_lp;          // partial derivative of the loss function with respect to the output layer
     float lr = 0.1f;           // learning rate
-    bool wb = false;           // use bias flag
+    bool wb = true;           // use bias flag
     DataVendor* dv = nullptr;  // pointer to data vendor
 
 public:
