@@ -125,6 +125,44 @@ ObjectDataVendor::ObjectDataVendor(std::initializer_list<Data> l) {
     std::copy(l.begin(), l.end(), data);
 }
 
+FileWeightVendor::FileWeightVendor(const std::string& path) {
+    std::ifstream ifs(path);
+    ifs >> count_ >> with_bias_;
+    weight_matrices = new Matrix[count_];
+    if (with_bias_ == 1)
+        biases = new Vector[count_];
+
+    for (size_t l{}; l < count_; ++l) {
+        size_t r, c;
+        ifs >> r >> c;
+        for (size_t i{}; i < r; ++i)
+            for (size_t j{}; j < c; ++j) 
+                ifs >> weight_matrices[l].data()[i].data()[j];
+        
+        if (with_bias_ == 1)
+            for (size_t i{}; i < r; ++i)
+                ifs >> biases[l].data()[i];
+    }
+}
+
+ObjectWeightVendor::ObjectWeightVendor(std::initializer_list<Matrix> l) {
+    count_ = l.size();
+    weight_matrices = new Matrix[count_];
+    std::copy(l.begin(), l.end(), weight_matrices);
+}
+
+ObjectWeightVendor::ObjectWeightVendor(std::initializer_list<std::pair<Matrix, Vector>> l) {
+    count_ = l.size();
+    weight_matrices = new Matrix[count_];
+    biases = new Vector[count_];
+    size_t i{};
+    for (const auto& weight: l) {
+        weight_matrices[i] = weight.first;
+        biases[i] = weight.second;
+        ++i;
+    }
+}
+
 Activation::Activation() : a(id), ad(id_deriv) { }
 
 Activation::Activation(const FtoF& activation, const FtoF& activation_deriv) : a(activation), ad(activation_deriv) { }

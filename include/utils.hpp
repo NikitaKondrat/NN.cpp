@@ -140,11 +140,32 @@ public:
     ObjectDataVendor(std::initializer_list<Data> l);
 };
 
-class WeightVendor : public Vendor { };
+/**
+ * @brief Base class for weights providers in a neural network.
+ */
+class WeightVendor : public Vendor {
+protected:
+    size_t with_bias_;
+    Matrix* weight_matrices = nullptr;
+    Vector* biases = nullptr;
+};
 
-class FileWeightVendor : public WeightVendor { };
+/**
+ * @brief Class of a weight provider that loads data from file.
+ */
+class FileWeightVendor : public WeightVendor {
+public:
+    FileWeightVendor(const std::string&);
+};
 
-class ObjectWeightVendor : public WeightVendor { };
+/**
+ * @brief Class of a weight provider that stores data copied from an initializer list.
+ */
+class ObjectWeightVendor : public WeightVendor {
+public:
+    ObjectWeightVendor(std::initializer_list<Matrix> l);
+    ObjectWeightVendor(std::initializer_list<std::pair<Matrix, Vector>> l);
+};
 
 /**
  * @brief Wrapper class for activation function and its derivative.
