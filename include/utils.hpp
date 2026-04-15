@@ -231,6 +231,20 @@ public:
 
 /**
  * @brief Class of a data provider that loads data from file.
+ * 
+ * Values are read using standard stream extraction (`>>`), so they may be 
+ * separated by any whitespace (spaces, tabs, or newlines).
+ * 
+ * @par Expected File Structure:
+ * 1. **Header**:
+ *    - `count` (size_t)    : Total number of training samples.
+ *    - `in_size` (size_t)  : Dimension of each input vector.
+ *    - `out_size` (size_t) : Dimension of each target vector.
+ * 2. **Sample Blocks** (repeated exactly `count` times):
+ *    - `in_size` values    : Input vector elements.
+ *    - `out_size` values   : Target vector elements.
+ * 
+ * @param path Absolute or relative path to the dataset file.
  */
 class FileDataVendor : public DataVendor {
 public:
@@ -276,6 +290,20 @@ public:
 
 /**
  * @brief Class of a weight provider that loads data from file.
+ * 
+ * Values are read using standard stream extraction (`>>`), so they may be 
+ * separated by any whitespace (spaces, tabs, or newlines).
+ * 
+ * @par Expected File Structure:
+ * 1. **Header**:
+ *    - `count` (size_t)    : Number of weight layers to load.
+ *    - `with_bias` (bool)  : Non-zero if bias vectors are present in the file.
+ * 2. **Layer Blocks** (repeated exactly `count` times):
+ *    - `rows` `cols`       : Dimensions of the weight matrix.
+ *    - `rows × cols` values: Weight matrix elements in **row-major** order.
+ *    - `rows` values       : Bias vector elements (read only if `with_bias != 0`).
+ * 
+ * @param path Absolute or relative path to the dataset file.
  */
 class FileWeightVendor : public WeightVendor {
 public:
