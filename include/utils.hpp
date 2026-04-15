@@ -241,8 +241,7 @@ public:
  *    - `in_size` (size_t)  : Dimension of each input vector.
  *    - `out_size` (size_t) : Dimension of each target vector.
  * 2. **Sample Blocks** (repeated exactly `count` times):
- *    - `in_size` values    : Input vector elements.
- *    - `out_size` values   : Target vector elements.
+ *    - `in_size` `out_size` values : Elements of the input and output vectors.
  * 
  * @param path Absolute or relative path to the dataset file.
  */
