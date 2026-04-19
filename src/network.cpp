@@ -16,6 +16,8 @@ Network::Network(
     layers[0].set_z(Vector(in_size));
     layers[n_layers - 1].set_z(Vector(out_size));
 
+    out = Vector(out_size);
+
     weights = new Weight[n_layers - 1];
     for (size_t i{1}; i < n_layers - 2; ++i)
         weights[i].set_w(Matrix(l_size, l_size));
@@ -74,7 +76,7 @@ void Network::propagate(bool with_bias = false) {
     }
 }
 
-void Network::backpropagate(bool with_out_activ = true) {
+void Network::backpropagate(bool with_out_activ, double lr, NetworkLogger& logger) {
     size_t k = n_layers - 1;
     Layer& L = layers[k];
     Layer& L_p = layers[k - 1];
@@ -101,6 +103,28 @@ void Network::backpropagate(bool with_out_activ = true) {
         grads[k - 1].set_w(outer_product(dl_dz, L_p.gz()));
         grads[k - 1].set_b(dl_dz);
     }
+
+    for (size_t i = 0; i < n_layers - 1; ++i) {
+        const Matrix& grad_w = grads[i].w();
+        const Vector& grad_b = grads[i].b();
+        const Matrix& cur_w = weights[i].w();
+        const Vector& cur_b = weights[i].b();
+
+        Matrix new_w(cur_w.rows(), cur_w.cols());
+        for (size_t r = 0; r < cur_w.rows(); ++r)
+            for (size_t c = 0; c < cur_w.cols(); ++c)
+                new_w[r][c] = cur_w[r][c] - lr * grad_w[r][c];
+
+        Vector new_b(cur_b.size());
+        for (size_t j = 0; j < cur_b.size(); ++j)
+            new_b[j] = cur_b[j] - lr * grad_b[j];
+
+        weights[i].set_w(std::move(new_w));
+        weights[i].set_b(std::move(new_b));
+
+        logger.log_matrix(weights[i].w());
+        logger.log_vector(weights[i].b());
+    }
 }
 
 void Network::set_lp(const Loss& lp) {
@@ -117,31 +141,4 @@ Weight& Network::get_weight(size_t idx) {
     if (idx >= n_layers - 1)
         throw std::out_of_range("weight index out of range");
     return weights[idx];
-}
-
-void Network::update_weights(double lr, NetworkLogger& logger) {
-    logger.log("UPDATE");
-
-    for (size_t i = 0; i < n_layers - 1; ++i) {
-        const Matrix& grad_w = grads[i].w();
-        const Vector& grad_b = grads[i].b();
-
-        const Matrix& current_w = weights[i].w();
-        const Vector& current_b = weights[i].b();
-
-        Matrix new_w(current_w.rows(), current_w.cols());
-        for (size_t r = 0; r < current_w.rows(); ++r)
-            for (size_t c = 0; c < current_w.cols(); ++c)
-                new_w[r][c] = current_w[r][c] - lr * grad_w[r][c];
-
-        Vector new_b(current_b.size());
-        for (size_t j = 0; j < current_b.size(); ++j)
-            new_b[j] = current_b[j] - lr * grad_b[j];
-
-        weights[i].set_w(std::move(new_w));
-        weights[i].set_b(std::move(new_b));
-
-        logger.log_matrix(weights[i].w());
-        logger.log_vector(weights[i].b());
-    }
 }

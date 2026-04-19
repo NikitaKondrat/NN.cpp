@@ -4,6 +4,8 @@
 #include <string>
 #include "utils.hpp"
 
+class NetworkLogger;
+
 using Loss = std::function<Vector(const Vector&, const Vector&)>;
 
 class Network {
@@ -19,9 +21,8 @@ public:
     ~Network();
     void fill_from_path(std::string);
     void propagate(bool);
-    void backpropagate(bool);
+    void backpropagate(bool with_out_activ, double lr, NetworkLogger& logger);
     void set_lp(const Loss&);
     Layer& get_layer(size_t idx);
     Weight& get_weight(size_t idx);
-    void update_weights(double lr, NetworkLogger& logger);
 };
