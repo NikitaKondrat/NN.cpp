@@ -19,6 +19,11 @@ Matrix::Matrix(const Matrix& other) : Matrix(other.n_rows, other.n_cols, nullptr
     std::copy(other.matrix, other.matrix + other.n_rows, matrix);
 }
 
+Matrix& Matrix::operator=(Matrix other) noexcept {
+    swap(other);
+    return *this;
+}
+
 Matrix::Matrix(Matrix&& other) noexcept {
     swap(other);
     other.n_rows = 0;
@@ -30,14 +35,9 @@ Matrix::~Matrix() {
     delete[] matrix;
 }
 
-Matrix& Matrix::operator=(Matrix other) {
-    swap(other);
-    return *this;
-}
-
 const Row& Matrix::operator[](size_t idx) const {
     if (idx >= n_rows)
-        throw std::out_of_range("row index out of range");
+        throw std::out_of_range("Row index out of range");
     return matrix[idx];
 }
 
@@ -49,9 +49,15 @@ Matrix Matrix::operator-(const Matrix& other) const {
     return apply_op(other, op::sub);
 }
 
+Matrix& Matrix::operator-=(const Matrix& other) {
+    Matrix result = apply_op(other, op::sub);
+    swap(result);
+    return *this;
+}
+
 Vector Matrix::operator*(const Vector& v) const {
     if (v.size() != n_cols)
-        throw std::invalid_argument("dimentional inconsistency in matrix-vector multiplication");
+        throw std::invalid_argument("Dimentional inconsistency in matrix-vector multiplication");
     Vector result(n_rows);
     float* result_values = result.data();
     const float* v_values = v.data();
@@ -76,19 +82,19 @@ Matrix Matrix::map(const FtoF& func) const {
     return result;
 }
 
-size_t Matrix::rows() const {
+size_t Matrix::rows() const noexcept {
     return n_rows;
 }
 
-size_t Matrix::cols() const {
+size_t Matrix::cols() const noexcept {
     return n_cols;
 }
 
-Row* Matrix::data() {
+Row* Matrix::data() noexcept {
     return matrix;
 }
 
-const Row* Matrix::data() const {
+const Row* Matrix::data() const noexcept {
     return matrix;
 }
 
@@ -100,7 +106,7 @@ void Matrix::swap(Matrix& other) noexcept {
 
 Matrix Matrix::apply_op(const Matrix& other, const FFtoF& op) const {
     if (n_rows != other.n_rows || n_cols != other.n_cols)
-        throw std::invalid_argument("dimentional inconsistency in applied matrix operation");
+        throw std::invalid_argument("Dimentional inconsistency in applied matrix operation");
     Matrix result = Matrix(n_rows, n_cols);
     for (size_t i{}; i < n_rows; ++i) {
         const float* this_row = matrix[i].data();
@@ -108,17 +114,6 @@ Matrix Matrix::apply_op(const Matrix& other, const FFtoF& op) const {
         float* result_row = result.matrix[i].data();
         for (size_t j{}; j < n_cols; ++j)
             result_row[j] = op(this_row[j], other_row[j]);
-    }
-    return result;
-}
-
-Matrix operator*(float a, const Matrix& matrix) {
-    Matrix result(matrix.n_rows, matrix.n_cols);
-    for (size_t i{}; i < matrix.n_rows; ++i) {
-        const float* matrix_row = matrix.data()[i].data();
-        float* result_row = result.data()[i].data();
-        for (size_t j{}; j < matrix.n_cols; ++j)
-            result_row[j] = a * matrix_row[j];
     }
     return result;
 }
@@ -148,7 +143,7 @@ Matrix outer_product(const Vector& u, const Vector& v) {
 
 Vector operator*(const Vector& v, const Matrix& matrix) {
     if (v.size() != matrix.rows())
-        throw std::invalid_argument("dimentional inconsistency in vector-matrix multiplication");
+        throw std::invalid_argument("Dimentional inconsistency in vector-matrix multiplication");
     Vector result(matrix.cols());
     const float* v_values = v.data();
     float* result_values = result.data();

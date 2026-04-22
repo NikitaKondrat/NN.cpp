@@ -39,7 +39,7 @@ float relu_deriv(float x) {
 
 Vector mse_lp(const Vector& est, const Vector& ans) {
     if (est.size() != ans.size())
-        throw std::invalid_argument("same-dimantional vectors required to compute loss partial derivative");
+        throw std::invalid_argument("Same-dimantional vectors required to compute loss partial derivative");
     size_t n = est.size();
     Vector result(n);
     for (size_t i{}; i < n; ++i) 
@@ -49,7 +49,7 @@ Vector mse_lp(const Vector& est, const Vector& ans) {
 
 Vector bce_lp(const Vector& est, const Vector& ans) {
     if (est.size() != ans.size())
-        throw std::invalid_argument("same-dimantional vectors required to compute loss partial derivative");
+        throw std::invalid_argument("Same-dimantional vectors required to compute loss partial derivative");
     size_t n = est.size();
     Vector result(n);
     float eps = 1e-7;
@@ -62,7 +62,7 @@ Vector bce_lp(const Vector& est, const Vector& ans) {
 
 Vector cce_lp(const Vector& est, const Vector& ans) {
     if (est.size() != ans.size())
-        throw std::invalid_argument("same-dimantional vectors required to compute loss partial derivative");
+        throw std::invalid_argument("Same-dimantional vectors required to compute loss partial derivative");
     size_t n = est.size();
     Vector result(n);
     for (size_t i{}; i < n; ++i) {
@@ -79,19 +79,15 @@ Activation::Activation(const Activation& activation) : a(activation.a), ad(activ
 
 Layer::Layer() : z_(Vector()), activation_(Activation()) { }
 
-void Layer::set_z(const Vector& z) {
-    z_ = z;
-}
-
-void Layer::set_z(Vector&& z) {
-    z_ = std::move(z);
-}
-
-Activation& Layer::activation() {
+Activation& Layer::activation() noexcept {
     return activation_;
 }
 
-const Vector& Layer::z() const {
+Vector& Layer::z() noexcept {
+    return z_;
+}
+
+const Vector& Layer::z() const noexcept {
     return z_;
 }
 
@@ -105,27 +101,19 @@ Vector Layer::gz() const {
 
 Weight::Weight() : w_(Matrix()), b_(Vector()) { }
 
-void Weight::set_w(const Matrix& w) {
-    w_ = w;
-}
-
-void Weight::set_w(Matrix&& w) {
-    w_ = std::move(w);
-}
-
-void Weight::set_b(const Vector& b) {
-    b_ = b;
-}
-
-void Weight::set_b(Vector&& b) {
-    b_ = std::move(b);
-}
-
-const Matrix& Weight::w() const {
+Matrix& Weight::w() noexcept {
     return w_;
 }
 
-const Vector& Weight::b() const {
+const Matrix& Weight::w() const noexcept {
+    return w_;
+}
+
+Vector& Weight::b() noexcept {
+    return b_;
+}
+
+const Vector& Weight::b() const noexcept {
     return b_;
 }
 
@@ -134,15 +122,15 @@ DataVendor::~DataVendor() {
     data = nullptr;
 }
 
-const Data& DataVendor::fetch(size_t idx) {
+const Data& DataVendor::fetch(size_t idx) const {
     return data[idx];
 }
 
-size_t DataVendor::in_size() const {
+size_t DataVendor::in_size() const noexcept {
     return in_size_;
 }
 
-size_t DataVendor::out_size() const {
+size_t DataVendor::out_size() const noexcept {
     return out_size_;
 }
 
@@ -176,13 +164,14 @@ WeightVendor::~WeightVendor() {
     weights = nullptr;
 }
 
-const Weight& WeightVendor::fetch(size_t idx) {
+const Weight& WeightVendor::fetch(size_t idx) const {
     return weights[idx];
 }
 
 FileWeightVendor::FileWeightVendor(const std::string& path) {
     std::ifstream ifs(path);
-    ifs >> count_ >> with_bias_;
+    bool with_bias;
+    ifs >> count_ >> with_bias;
     weights = new Weight[count_];
 
     for (size_t l{}; l < count_; ++l) {
@@ -194,55 +183,63 @@ FileWeightVendor::FileWeightVendor(const std::string& path) {
             for (size_t j{}; j < c; ++j)
                 ifs >> row_data[j];
         }
-        weights[l].set_w(std::move(weight));
+        weights[l].w() = std::move(weight);
 
-        if (with_bias_) {
+        if (with_bias) {
             Vector bias(r);
             float* bias_data = bias.data();
             for (size_t i{}; i < r; ++i)
                 ifs >> bias_data[i];
-            weights[l].set_b(std::move(bias));
+            weights[l].b() = std::move(bias);
+        } else {
+            weights[l].b() = Vector(r);
         }
     }
 }
 
 ObjectWeightVendor::ObjectWeightVendor(std::initializer_list<Matrix> l) {
     count_ = l.size();
-    with_bias_ = false;
     weights = new Weight[count_];
     size_t i{};
-    for (const auto& weight : l)
-        weights[i].set_w(weight);
+    for (const auto& weight : l) {
+        weights[i].w() = weight;
+        weights[i].b() = Vector(weight.rows());
+        ++i;
+    }
 }
 
 ObjectWeightVendor::ObjectWeightVendor(std::initializer_list<std::pair<Matrix, Vector>> l) {
     count_ = l.size();
-    with_bias_ = true;
     weights = new Weight[count_];
     size_t i{};
     for (const auto& weight: l) {
-        weights[i].set_w(weight.first);
-        weights[i].set_b(weight.second);
+        weights[i].w() = weight.first;
+        weights[i].b() = weight.second;
+        ++i;
     }
 }
 
 RandomWeightVendor::RandomWeightVendor(
-    size_t n_layers, size_t l_size, size_t in_size, size_t out_size, 
+    size_t n_layers, size_t in_size, size_t l_size,  size_t out_size, 
     bool with_bias, float a, float b
 ) : gen(std::random_device{}()), dist(a, b) {
     count_ = n_layers;
-    with_bias_ = with_bias;
-    auto func = [this](float) mutable -> float { return dist(gen); };
+    FtoF func = [this](float) mutable -> float { return dist(gen); };
     weights = new Weight[n_layers - 1];
 
-    weights[0].set_w(Matrix(l_size, in_size).map(func));
+    weights[0].w() = Matrix(l_size, in_size).map(func);
     for (size_t i{1}; i < n_layers - 2; ++i) 
-        weights[i].set_w(Matrix(l_size, l_size).map(func));
-    weights[n_layers - 2].set_w(Matrix(out_size, l_size).map(func));
+        weights[i].w() = Matrix(l_size, l_size).map(func);
+    weights[n_layers - 2].w() = Matrix(out_size, l_size).map(func);
 
-    if (with_bias) {
-        for (size_t i{}; i < n_layers - 2; ++i)
-            weights[i].set_b(Vector(l_size).map(func));
-        weights[n_layers - 2].set_b(Vector(out_size).map(func));
+    for (size_t i{}; i < n_layers - 2; ++i) {
+        if (with_bias)
+            weights[i].b() = Vector(l_size).map(func);
+        else
+            weights[i].b() = Vector(l_size);
     }
+    if (with_bias)
+        weights[n_layers - 2].b() = Vector(out_size).map(func);
+    else
+        weights[n_layers - 2].b() = Vector(out_size);
 }

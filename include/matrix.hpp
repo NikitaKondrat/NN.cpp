@@ -29,9 +29,9 @@ public:
     Matrix(size_t n_rows, size_t n_cols);
     Matrix(std::initializer_list<Row> l);
     Matrix(const Matrix& other);
+    Matrix& operator=(Matrix other) noexcept;
     Matrix(Matrix&& other) noexcept;
     ~Matrix();
-    Matrix& operator=(Matrix other);
     /** @} */
 
     /**
@@ -53,19 +53,18 @@ public:
     Matrix operator-(const Matrix& other) const;
 
     /**
+     * @brief Modificates matrix by subtracting another matrix element-wise.
+     * @param other Matrix to subtract.
+     * @return Reference to the modificated matrix.
+     */
+    Matrix& operator-=(const Matrix& other);
+
+    /**
      * @brief Multiplies matrix by a column vector.
      * @param v Column vector (size must match `cols()`).
      * @return Resulting vector of size `rows()`.
      */
     Vector operator*(const Vector& v) const;
-
-    /**
-     * @brief Multiplies matrix by a scalar element-wise.
-     * @param a Scalar multiplier.
-     * @param matrix Matrix to multiply.
-     * @return Resulting matrix.
-     */
-    friend Matrix operator*(float a, const Matrix& matrix);
 
     /**
      * @brief Applies a function to each element of the matrix.
@@ -78,13 +77,13 @@ public:
      * @brief Number of rows getter.
      * @return Number of rows.
      */
-    size_t rows() const;
+    size_t rows() const noexcept;
 
     /**
      * @brief Number of columns getter.
      * @return Number of columns.
      */
-    size_t cols() const;
+    size_t cols() const noexcept;
 
     /**
      * @defgroup matrix_data_getters Matrix Data Accessors
@@ -92,8 +91,8 @@ public:
      * @return Pointer to row data (const or non-const).
      * @{
      */
-    Row* data();
-    const Row* data() const;
+    Row* data() noexcept;
+    const Row* data() const noexcept;
     /** @} */
 };
 

@@ -16,6 +16,11 @@ Vector::Vector(const Vector& other) : Vector(other.n, nullptr) {
     std::copy(other.values, other.values + other.n, values);
 }
 
+Vector& Vector::operator=(Vector other) noexcept {
+    swap(other);
+    return *this;
+}
+
 Vector::Vector(Vector&& other) noexcept {
     swap(other);
     other.n = 0;
@@ -24,11 +29,6 @@ Vector::Vector(Vector&& other) noexcept {
 
 Vector::~Vector() {
     delete[] values;
-}
-
-Vector& Vector::operator=(Vector other) {
-    swap(other);
-    return *this;
 }
 
 const float& Vector::operator[](size_t idx) const {
@@ -41,23 +41,35 @@ float& Vector::operator[](size_t idx) {
     return const_cast<float&>(static_cast<const Vector&>(*this)[idx]);
 }
 
-Vector Vector::operator+(const Vector& other) const {
-    return apply_op(other, op::add);
-}
-
 Vector Vector::operator-(const Vector& other) const {
     return apply_op(other, op::sub);
 }
 
-size_t Vector::size() const {
+Vector& Vector::operator-=(const Vector& other) {
+    Vector result = apply_op(other, op::sub);
+    swap(result);
+    return *this;
+}
+
+Vector Vector::operator+(const Vector& other) const {
+    return apply_op(other, op::add);
+}
+
+Vector& Vector::operator+=(const Vector& other) {
+    Vector result = apply_op(other, op::add);
+    swap(result);
+    return *this;
+}
+
+size_t Vector::size() const noexcept {
     return n;
 }
 
-float* Vector::data() {
+float* Vector::data() noexcept {
     return values;
 }
 
-const float* Vector::data() const {
+const float* Vector::data() const noexcept {
     return values;
 }
 
@@ -79,16 +91,6 @@ Vector Vector::map(const FtoF& func) const {
     Vector result(n);
     for (size_t i{}; i < n; ++i)
         result.values[i] = func(values[i]);
-    return result;
-}
-
-Vector operator*(float a, const Vector& v) {
-    Vector result(v.n);
-    for (size_t i{}; i < v.n; ++i) {
-        const float* v_values = v.data();
-        float* result_values = result.data();
-        result_values[i] = a * v_values[i];
-    }
     return result;
 }
 

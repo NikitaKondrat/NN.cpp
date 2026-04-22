@@ -27,9 +27,9 @@ public:
     Vector(size_t);
     Vector(std::initializer_list<float>);
     Vector(const Vector&);
+    Vector& operator=(Vector) noexcept;
     Vector(Vector&&) noexcept;
     ~Vector();
-    Vector& operator=(Vector);
     /** @} */
 
     /**
@@ -44,6 +44,20 @@ public:
     /** @} */
 
     /**
+     * @brief Subtracts two vectors element-wise.
+     * @param other Vector to subtract.
+     * @return Resulting vector.
+     */
+    Vector operator-(const Vector& other) const;
+
+     /**
+     * @brief Modificated vector by subtracting another vector element-wise.
+     * @param other Vector to subtract.
+     * @return Reference to the modificated vector.
+     */
+    Vector& operator-=(const Vector& other);
+
+    /**
      * @brief Adds two vectors element-wise.
      * @param other Vector to add.
      * @return Resulting vector.
@@ -51,19 +65,11 @@ public:
     Vector operator+(const Vector& other) const;
 
     /**
-     * @brief Subtracts two vectors element-wise.
-     * @param other Vector to subtract.
-     * @return Resulting vector.
+     * @brief Modificates vector by adding another vector element-wise.
+     * @param other Vector to add.
+     * @return Reference to the modificated vector.
      */
-    Vector operator-(const Vector& other) const;
-
-    /**
-     * @brief Multiplies a vector by a scalar element-wise.
-     * @param a Scalar multiplier.
-     * @param other Vector to apply multiplication for.
-     * @return Resulting vector.
-     */
-    friend Vector operator*(float a, const Vector& other);
+    Vector& operator+=(const Vector& other);
 
     /**
      * @brief Applies a function to each element of the vector.
@@ -76,16 +82,16 @@ public:
      * @brief Vector size getter.
      * @return Number of values in the vector.
      */
-    size_t size() const;
+    size_t size() const noexcept;
 
     /**
      * @defgroup vector_data_getters Vector Data Accessors
      * @brief Returns pointers to the internal data array.
-     * @return Pointer to element data (const or non-const).
+     * @return Pointer to element data.
      * @{
      */
-    float* data();
-    const float* data() const;
+    float* data() noexcept;
+    const float* data() const noexcept;
     /** @} */
 };
 

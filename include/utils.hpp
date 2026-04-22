@@ -75,24 +75,20 @@ public:
     Layer();
 
     /**
-     * @defgroup neurons_setters Neurons Setters
-     * @brief Sets neurons values.
-     * @param z Values to set.
+     * @defgroup layer_getters Layer Accessors
+     * @brief Neurons getter.
+     * @return Referecnce to the vector of values of the layers neurons.
+     * @{
      */
-    void set_z(const Vector& z);
-    void set_z(Vector&& z);
+    Vector& z() noexcept;
+    const Vector& z() const noexcept;
+    /** @} */
 
     /**
      * @brief Activation function and its derivative getter and setter.
      * @return Reference to the `Activation`.
      */
-    Activation& activation();
-
-    /**
-     * @brief Neurons getter.
-     * @return Vector of values of the layers neurons.
-     */
-    const Vector& z() const;
+    Activation& activation() noexcept;
 
     /**
      * @brief Gets neurons values with applied activation function.
@@ -118,38 +114,25 @@ private:
     Vector b_;  // bias vector
 public:
     Weight();
-    
+
     /**
-     * @defgroup weight_setters Weight Setters
-     * @brief Weight matrix setters.
-     * @param w Weight matrix.
+     * @defgroup weights_weight_getters Weight Matrix Weight Accessors
+     * @brief Weight matrix getters.
+     * @return Weight matrix as a reference or const reference.
      * @{
      */
-    void set_w(const Matrix& w);
-    void set_w(Matrix&& w);
+    Matrix& w() noexcept;
+    const Matrix& w() const noexcept;
     /** @} */
 
     /**
-     * @defgroup bias_setters Bias Setters
-     * @brief Bias vector setters.
-     * @param b Bias vector.
-     * @{
-     */
-    void set_b(const Vector& b);
-    void set_b(Vector&& b);
-    /** @} */
-
-    /**
-     * @brief Weight matrix getter.
-     * @return Weight matrix as a const reference.
-     */
-    const Matrix& w() const;
-
-    /**
+     * @defgroup bias_weight_getters Bias Weight Accessors
      * @brief Bias vector getter.
-     * @return Bias vector as a const reference.
+     * @return Bias vector as a reference or const reference.
      */
-    const Vector& b() const;
+    Vector& b() noexcept;
+    const Vector& b() const noexcept;
+    /** @} */
 };
 
 /**
@@ -174,24 +157,26 @@ public:
      * @param idx Zero-based index of the item.
      * @return Constant reference to the requested item.
      */
-    virtual const T& fetch(size_t idx) = 0;
+    virtual const T& fetch(size_t idx) const = 0;
 
     /**
      * @brief Number of stored items getter.
      * @return Number of stored items.
      */
-    size_t count() const {
+    size_t count() const noexcept {
         return count_;
     };
 };
 
 /**
  * @brief Base class for neural network data providers.
+ * 
  * @note This class itself is not used to construct instances of data providers,
  *       use derived classes instead. All restrictions, however, MUST be observed in every derived class.
+ * 
  * @warning When used with a neural network:
- *          - `in_size_` MUST be equal to the input layer size (`layers[0].z().size()`)
- *          - `out_size_` MUST be equal to the target vector size (`y.size()`)
+ *          - `in_size_` MUST be equal to the input layer size (`layers[0].z().size()`).
+ *          - `out_size_` MUST be equal to the target vector size (`y.size()`).
  */
 class DataVendor : public Vendor<Data> {
 protected:
@@ -210,23 +195,23 @@ public:
      * @warning If `idx` >= `count_` it is an UB.
      * @param idx Zero-based index of the data sample to fetch from `data`.
      * @return Constant reference of a `std::pair<Data>` instance, where
-     *         - first item is input vector data
-     *         - second item is target vector data
+     *         - first item is input vector data.
+     *         - second item is target vector data.
      */
-    virtual const Data& fetch(size_t idx) override;
+    virtual const Data& fetch(size_t idx) const override;
 
     /**
      * @brief Input vector size getter.
      * @return Input vector size.
      */
     
-    size_t in_size() const;
+    size_t in_size() const noexcept;
 
     /**
      * @brief Target vector size getter.
      * @return Target vector size. 
      */
-    size_t out_size() const;
+    size_t out_size() const noexcept;
 };
 
 /**
@@ -260,18 +245,18 @@ public:
 
 /**
  * @brief Base class for neural network weights providers.
+ * 
  * @note This class itself is not used to construct instances of weights providers,
  *       use derived classes instead. All restrictions, however, MUST be observed in every derived class.
+ * 
  * @warning When used with a neural network:
- *          - `count_` MUST be equal to the number of weights in a neural network (`n_layers - 1`)
- *          - `with_bias_` MUST correspond with bias usage in a neural network (`wb`)
- *          - `weights[i].w().size()` MUST be equal to the corresponding weight matrix in a neural network
- *          - `weights[i].b().size()` MUST be equal to the corresponding bias in a neural network
+ *          - `weights[0].w().cols()` MUST be equal to `layers[0].z().size()`.
+ *          - `weights[count_ - 1].w().rows()` MUST be equal to `y.size()`.
+ *          - `weights[i].b().size()` MUST be equal to the corresponding bias in a neural network.
  */
 class WeightVendor : public Vendor<Weight> { 
 protected:
-    bool with_bias_ = true;           // use bias flag
-    Weight* weights = nullptr;        // stored weight matrices and biases
+    Weight* weights = nullptr;  // stored weight matrices and biases
     WeightVendor() = default;  
     virtual ~WeightVendor();
 public:
@@ -282,9 +267,9 @@ public:
      * @brief Fetches a single weight from the stored weights.
      * @warning If `idx` >= `count_` it is an UB.
      * @param idx Zero-based index of the weight to fetch from `weights`.
-     * @return Constant reference of a `Weight` instance
+     * @return Constant reference of a `Weight` instance.
      */
-    virtual const Weight& fetch(size_t idx) override;
+    virtual const Weight& fetch(size_t idx) const override;
 };
 
 /**
@@ -320,7 +305,6 @@ public:
 
 /**
  * @brief Provider of a filler function for weights initialization in a neural network.
- * 
  * @param a Lower bound of the distribution.
  * @param b Upper bound of the distribution.
  * @return Filler function.
@@ -338,15 +322,15 @@ public:
     /**
      * @brief Constructor.
      * @param n_layers Number of layers in a neural network.
-     * @param l_size Size of the hidden layer in a neural network.
      * @param in_size Size of the input layer in a neural network.
+     * @param l_size Size of the hidden layer in a neural network.
      * @param out_size Size of the output layer in a neural network.
-     * @param with_bias Use bias flag, default = `true`.
+     * @param with_bias Use bias flag, default = `false`.
      * @param a Lower bound of the distribution, default = `-1.0f`.
      * @param b Upper bound of the distribution, default = `1.0f`.
      */
     RandomWeightVendor(
-        size_t n_layers, size_t l_size, size_t in_size, size_t out_size, bool with_bias = true,
+        size_t n_layers, size_t in_size, size_t l_size,  size_t out_size, bool with_bias = false,
         float a = -1.0f, float b = 1.0f
     );
 };
