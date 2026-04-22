@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(nn main.cpp 
     src/vector.cpp
     src/matrix.cpp 
+    src/vendors.cpp
     src/utils.cpp
     src/network.cpp 
 )     
@@ -27,6 +28,7 @@ FetchContent_MakeAvailable(Catch2)
 add_executable(tests tests.cpp 
     src/vector.cpp
     src/matrix.cpp 
+    src/vendors.cpp
     src/utils.cpp
     src/network.cpp 
 )

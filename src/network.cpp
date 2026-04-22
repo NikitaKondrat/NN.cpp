@@ -5,29 +5,29 @@
 #include <numeric>
 #include <iostream>
 
-Network::Network(
-    size_t n_layers, size_t l_size, 
-    size_t in_size, size_t out_size
-) {
-    this->n_layers = n_layers;
-    
-    grads = new Weight[n_layers - 1];
+Network::Network(const WeightVendor& wv, const ActivationVendor& av, DataVendor* dv) {
+    n_layers = wv.count();
+    this->dv = dv;
 
     layers = new Layer[n_layers];
-    layers[0].set_z(Vector(in_size));
-    for (size_t i{1}; i < n_layers - 1; ++i)
-        layers[i].set_z(Vector(l_size));
-    layers[n_layers - 1].set_z(Vector(out_size));
-
     weights = new Weight[n_layers - 1];
-    weights[0].set_w(Matrix(l_size, in_size));
-    weights[0].set_b(Vector(l_size));
-    for (size_t i{1}; i < n_layers - 2; ++i) {
-        weights[i].set_w(Matrix(l_size, l_size));
-        weights[i].set_b(Vector(l_size));
+    grads = new Weight[n_layers - 1];
+
+    for (size_t i{}; i < n_layers - 1; ++i) {
+        const Weight& fetched_weight = wv.fetch(i);
+        Weight& weight = weights[i];
+
+        const Matrix& fetched_weight_matrix = fetched_weight.w();
+        Matrix& weight_matrix = weight.w();
+        weight_matrix = fetched_weight_matrix;
+
+        const Vector& fetched_bias = fetched_weight.b();
+        Vector& bias = weight.b();
+        bias = fetched_bias;
     }
-    weights[n_layers - 2].set_w(Matrix(out_size, l_size));
-    weights[n_layers - 2].set_b(Vector(out_size));
+
+    for (size_t i{}; i < n_layers; ++i)
+        layers[i].activation() = av.fetch(i);
 }
 
 Network::~Network() {
@@ -38,7 +38,7 @@ Network::~Network() {
 
 void Network::vend_data(size_t idx) {
     const Data& test = dv->fetch(idx);
-    layers[0].set_z(test.first);
+    layers[0].z() = test.first;
     y = test.second;
 }
 
@@ -48,8 +48,8 @@ void Network::propagate() {
         Vector z = weight.w() * layers[i].az();
         const Vector& b = weight.b();
         if (wb)
-            z = z + weight.b();
-        layers[i + 1].set_z(std::move(z));
+            z += weight.b();
+        layers[i + 1].z() = std::move(z);
     }
 }
 
@@ -63,9 +63,9 @@ void Network::backpropagate() {
     dL_dz = L.gz();
     dl_dz = hadamar(dl_dL, dL_dz);
 
-    grads[k - 1].set_w(outer_product(dl_dz, L_p.az()));
+    grads[k - 1].w() = outer_product(dl_dz, L_p.az());
     if (wb)
-        grads[k - 1].set_b(dl_dz);
+        grads[k - 1].b() = dl_dz;
 
     for (k = n_layers - 2; k > 0; --k) {
         Layer& L = layers[k];
@@ -75,17 +75,18 @@ void Network::backpropagate() {
         dL_dz = L.gz();
         dl_dz = hadamar(dl_dL, dL_dz);
 
-        grads[k - 1].set_w(outer_product(dl_dz, L_p.az()));
+        grads[k - 1].w() = outer_product(dl_dz, L_p.az());
         if (wb)
-            grads[k - 1].set_b(dl_dz);
+            grads[k - 1].b() = dl_dz;
     }
 }
 
 void Network::apply_grads() {
+    FtoF func = [&](float x) { return lr * x; };
     for (size_t i{}; i < n_layers - 1; ++i) {
-        weights[i].set_w(weights[i].w() - lr * grads[i].w());
+        weights[i].w() -= grads[i].w().map(func);
         if (wb)
-            weights[i].set_b(weights[i].b() - lr * grads[i].b());
+            weights[i].b() -= grads[i].b().map(func);
     }
 }
 
@@ -102,7 +103,7 @@ void Network::epochs(size_t epochs) {
 Vector Network::compute(const Vector& v) {
     if (v.size() != layers[0].z().size())
         throw std::invalid_argument("Dimentionally inconsistent vector was provided for computation");
-    layers[0].set_z(v);
+    layers[0].z() = v;
     propagate();
     return layers[n_layers - 1].az();
 }
@@ -127,27 +128,6 @@ Network& Network::set_dv(DataVendor* dv) {
     return *this;
 }
 
-Network& Network::fill_weights(WeightVendor* wv) {
-    for (size_t i{}; i < n_layers - 1; ++i) {
-        const Weight& fetched_weight = wv->fetch(i);
-        Weight& weight = weights[i];
-        const Matrix& fetched_weight_matrix = fetched_weight.w();
-        const Matrix& weight_matrix = weight.w();
-
-        if (fetched_weight_matrix.rows() != weight_matrix.rows() || 
-            fetched_weight_matrix.cols() != weight_matrix.cols())
-            throw std::invalid_argument("Dimentionally inconsistent matrices occured during weights filling");
-        weight.set_w(fetched_weight_matrix);
-
-        if (wb) {
-            if (fetched_weight.b().size() != weight.b().size())
-                throw std::invalid_argument("Dimentionally inconsistent vectors occured during weights filling");
-            weight.set_b(fetched_weight.b());
-        }
-    }
-    return *this;
-}
-
 Network& Network::set_layer_activation(size_t idx, const Activation& activation) {
     get_layer(idx).activation() = activation;
     return *this;
@@ -155,12 +135,12 @@ Network& Network::set_layer_activation(size_t idx, const Activation& activation)
 
 Layer& Network::get_layer(size_t idx) {
     if (idx >= n_layers)
-        throw std::out_of_range("layer index out of range");
+        throw std::out_of_range("Layer index out of range");
     return layers[idx];
 }
 
 Weight& Network::get_weight(size_t idx) {
     if (idx >= n_layers - 1)
-        throw std::out_of_range("weight index out of range");
+        throw std::out_of_range("Weight index out of range");
     return weights[idx];
 }

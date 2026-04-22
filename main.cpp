@@ -4,28 +4,27 @@
 #include <cmath>
 #include "network.hpp"
 
-void train_bool_op(const std::string& s, DataVendor& dv) {
+void train_bool_op(const std::string& s, DataVendor* dv) {
     size_t n_layers = 4;
-    size_t l_size = 3;
     size_t in_size = 2;
+    size_t l_size = 3;
     size_t out_size = 1;
     bool with_bias = false;
     size_t epochs = 100'000;
 
-    RandomWeightVendor wv(n_layers, l_size, in_size, out_size, with_bias);
+    RandomWeightVendor wv(n_layers, in_size, l_size, out_size, with_bias);
 
-    Network nw(n_layers, l_size, in_size, out_size);
-    nw.set_wb(false).fill_weights(&wv).set_dv(&dv);
-
+    ActivationVendor av(n_layers);
     Activation activation(sigmoid, sigmoid_deriv);
-    for (size_t i{1}; i < n_layers; ++i) 
-        nw.set_layer_activation(i, activation);
+    av.set_hid(activation).set_out(activation);
+
+    Network nw(wv, av, dv);
 
     nw.epochs(epochs);
 
-    Vector est(dv.count());
-    for (size_t i{}; i < dv.count(); ++i)
-        est[i] = nw.compute(dv.fetch(i).first)[0];
+    Vector est(dv->count());
+    for (size_t i{}; i < dv->count(); ++i)
+        est[i] = nw.compute(dv->fetch(i).first)[0];
 
     for (int i{0}; i <= 1; ++i)
         for (int j{0}; j <= 1; ++j)
@@ -33,24 +32,21 @@ void train_bool_op(const std::string& s, DataVendor& dv) {
     
 }
 
-void train_binary_clsf_line(DataVendor& dv) {
+void train_binary_clsf_line(DataVendor* dv) {
     size_t n_layers = 4;
-    size_t l_size = 16;
     size_t in_size = 2;
+    size_t l_size = 16;
     size_t out_size = 1;
     size_t epochs = 25'000;
     bool with_bias = true;
 
-    RandomWeightVendor wv(n_layers, l_size, in_size, out_size, with_bias);
+    RandomWeightVendor wv(n_layers, in_size, l_size, out_size, with_bias);
 
-    Network nw(n_layers, l_size, in_size, out_size);
-    nw.fill_weights(&wv).set_dv(&dv).set_lp(bce_lp).set_lr(0.01f);
+    ActivationVendor av(n_layers);
+    av.set_hid(Activation(relu, relu_deriv)).set_out(Activation(sigmoid, sigmoid_deriv));
 
-    Activation activation_h(relu, relu_deriv);
-    Activation activation_o(sigmoid, sigmoid_deriv);
-    for (size_t i{1}; i < n_layers - 1; ++i)
-        nw.set_layer_activation(i, activation_h);
-    nw.set_layer_activation(n_layers - 1, activation_o);
+    Network nw(wv, av, dv);
+    nw.set_wb(with_bias).set_lp(bce_lp).set_lr(0.01f);
 
     nw.epochs(epochs);
 
@@ -68,24 +64,21 @@ void train_binary_clsf_line(DataVendor& dv) {
     }
 }
 
-void train_binary_clsf_semicircle(DataVendor& dv) {
+void train_binary_clsf_semicircle(DataVendor* dv) {
     size_t n_layers = 4;
-    size_t l_size = 16;
     size_t in_size = 2;
+    size_t l_size = 16;
     size_t out_size = 1;
     size_t epochs = 25'000;
     bool with_bias = true;
 
-    RandomWeightVendor wv(n_layers, l_size, in_size, out_size, with_bias);
+    RandomWeightVendor wv(n_layers, in_size, l_size, out_size, with_bias);
 
-    Network nw(n_layers, l_size, in_size, out_size);
-    nw.fill_weights(&wv).set_dv(&dv).set_lp(bce_lp).set_lr(0.01f);
+    ActivationVendor av(n_layers);
+    av.set_hid(Activation(relu, relu_deriv)).set_out(Activation(sigmoid, sigmoid_deriv));
 
-    Activation activation_h(relu, relu_deriv);
-    Activation activation_o(sigmoid, sigmoid_deriv);
-    for (size_t i{1}; i < n_layers - 1; ++i)
-        nw.set_layer_activation(i, activation_h);
-    nw.set_layer_activation(n_layers - 1, activation_o);
+    Network nw(wv, av, dv);
+    nw.set_wb(with_bias).set_lp(bce_lp).set_lr(0.01f);
 
     nw.epochs(epochs);
 
@@ -124,11 +117,11 @@ int main() {
     };
 
     std::cout << "========== Binary operations training ==========" << std::endl;
-    train_bool_op("^", xor_ds);
+    train_bool_op("^", &xor_ds);
     std::cout << std::endl;
-    train_bool_op("&", and_ds);
+    train_bool_op("&", &and_ds);
     std::cout << std::endl;
-    train_bool_op("|", or_ds);
+    train_bool_op("|", &or_ds);
     std::cout << std::endl;
 
     ObjectDataVendor linear_ds = {
@@ -158,7 +151,7 @@ int main() {
     };
 
     std::cout << "========== Binary classification training (line) ==========" << std::endl;
-    train_binary_clsf_line(linear_ds);
+    train_binary_clsf_line(&linear_ds);
     std::cout << std::endl;
 
     ObjectDataVendor semicircle_ds = {
@@ -181,7 +174,7 @@ int main() {
         {{0.1f, 0.5f}, {0}},
         {{-0.1f, 0.5f}, {0}},
 
-        // Класс 1: снаружи (x² + y² > 1)
+        // Класс 1: снаружи полукруга (x² + y² > 1)
         {{1.5f, 0.0f}, {1}},
         {{-1.5f, 0.0f}, {1}},
         {{0.0f, 1.5f}, {1}},
@@ -198,6 +191,6 @@ int main() {
     };
 
     std::cout << "========== Binary classification training (semicircle) ==========" << std::endl;
-    train_binary_clsf_semicircle(semicircle_ds);
+    train_binary_clsf_semicircle(&semicircle_ds);
     std::cout << std::endl;
 }
