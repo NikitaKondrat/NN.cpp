@@ -14,11 +14,11 @@ void train_bool_op(const std::string& s, DataVendor* dv) {
 
     RandomWeightVendor wv(n_layers, in_size, l_size, out_size, with_bias);
 
-    Network nw(wv, dv);
-
+    ActivationVendor av(n_layers);
     Activation activation(sigmoid, sigmoid_deriv);
-    for (size_t i{1}; i < n_layers; ++i) 
-        nw.set_layer_activation(i, activation);
+    av.set_hid(activation).set_out(activation);
+
+    Network nw(wv, av, dv);
 
     nw.epochs(epochs);
 
@@ -42,14 +42,11 @@ void train_binary_clsf_line(DataVendor* dv) {
 
     RandomWeightVendor wv(n_layers, in_size, l_size, out_size, with_bias);
 
-    Network nw(wv, dv);
-    nw.set_wb(with_bias).set_lp(bce_lp).set_lr(0.01f);
+    ActivationVendor av(n_layers);
+    av.set_hid(Activation(relu, relu_deriv)).set_out(Activation(sigmoid, sigmoid_deriv));
 
-    Activation activation_h(relu, relu_deriv);
-    Activation activation_o(sigmoid, sigmoid_deriv);
-    for (size_t i{1}; i < n_layers - 1; ++i)
-        nw.set_layer_activation(i, activation_h);
-    nw.set_layer_activation(n_layers - 1, activation_o);
+    Network nw(wv, av, dv);
+    nw.set_wb(with_bias).set_lp(bce_lp).set_lr(0.01f);
 
     nw.epochs(epochs);
 
@@ -77,14 +74,11 @@ void train_binary_clsf_semicircle(DataVendor* dv) {
 
     RandomWeightVendor wv(n_layers, in_size, l_size, out_size, with_bias);
 
-    Network nw(wv, dv);
-    nw.set_wb(with_bias).set_lp(bce_lp).set_lr(0.01f);
+    ActivationVendor av(n_layers);
+    av.set_hid(Activation(relu, relu_deriv)).set_out(Activation(sigmoid, sigmoid_deriv));
 
-    Activation activation_h(relu, relu_deriv);
-    Activation activation_o(sigmoid, sigmoid_deriv);
-    for (size_t i{1}; i < n_layers - 1; ++i)
-        nw.set_layer_activation(i, activation_h);
-    nw.set_layer_activation(n_layers - 1, activation_o);
+    Network nw(wv, av, dv);
+    nw.set_wb(with_bias).set_lp(bce_lp).set_lr(0.01f);
 
     nw.epochs(epochs);
 

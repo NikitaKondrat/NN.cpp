@@ -33,7 +33,7 @@ Vector::~Vector() {
 
 const float& Vector::operator[](size_t idx) const {
     if (idx >= n)
-        throw std::out_of_range("vector index out of range");
+        throw std::out_of_range("Vector index out of range");
     return values[idx];
 }
 
@@ -80,7 +80,7 @@ void Vector::swap(Vector& other) noexcept {
 
 Vector Vector::apply_op(const Vector& other, const FFtoF& op) const {
     if (n != other.n) 
-        throw std::invalid_argument("same-dimensional vectors required for applied vector operation");
+        throw std::invalid_argument("Same-dimensional vectors required for applied vector operation");
     Vector result(n);
     for (size_t i{}; i < n; ++i)
         result.values[i] = op(values[i], other.values[i]);
@@ -96,7 +96,7 @@ Vector Vector::map(const FtoF& func) const {
 
 Vector hadamar(const Vector& u, const Vector& v) {
     if (u.size() != v.size()) 
-        throw std::invalid_argument("same-dimensional vectors required for hadamar multiplication");
+        throw std::invalid_argument("Same-dimensional vectors required for hadamar multiplication");
     Vector result(u.size());
     const float* u_values = u.data();
     const float* v_values = v.data();

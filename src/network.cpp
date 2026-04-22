@@ -5,7 +5,7 @@
 #include <numeric>
 #include <iostream>
 
-Network::Network(const WeightVendor& wv, DataVendor* dv) {
+Network::Network(const WeightVendor& wv, const ActivationVendor& av, DataVendor* dv) {
     n_layers = wv.count();
     this->dv = dv;
 
@@ -24,7 +24,10 @@ Network::Network(const WeightVendor& wv, DataVendor* dv) {
         const Vector& fetched_bias = fetched_weight.b();
         Vector& bias = weight.b();
         bias = fetched_bias;
-    }    
+    }
+
+    for (size_t i{}; i < n_layers; ++i)
+        layers[i].activation() = av.fetch(i);
 }
 
 Network::~Network() {

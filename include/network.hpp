@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <string>
 #include <random>
+#include "vendors.hpp"
 #include "utils.hpp"
 
 using Loss = std::function<Vector(const Vector&, const Vector&)>;
@@ -57,12 +58,13 @@ public:
     /**
      * @brief Constructs a new neural network.
      * @param wv `WeightVendor` used to construct neural network.
+     * @param av `ActivationVendor` setting activation functions to layers.
      * @param dv `DataVendor` supplying data for neural network.
      * 
      * @note The Network does NOT take ownership of the pointer.
      *       The caller must ensure that `dv` outlives the Network instance.
      */
-    Network(const WeightVendor& wv, DataVendor* dv);
+    Network(const WeightVendor& wv, const ActivationVendor& av, DataVendor* dv);
     Network(const Network&) = delete;
     Network& operator=(const Network&) = delete;
     ~Network();
