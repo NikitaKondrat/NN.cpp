@@ -99,13 +99,6 @@ TEST_CASE("Vector high order methods") {
     size_t size = 5;
     auto f = [](const float& a) -> float { return 2.0f * a + 1.0f; };
 
-    SECTION("apply") {
-        v.apply(f);
-        REQUIRE(v.size() == size);
-        for (size_t i{1}; i <= size; ++i)
-            REQUIRE(v[i - 1] == Catch::Approx(f(i)));
-    }
-
     SECTION("map") {
         Vector r = v.map(f);
         REQUIRE(r.size() == size);

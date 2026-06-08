@@ -140,14 +140,6 @@ public:
     Network& set_dv(DataVendor* dv);
 
     /**
-     * @brief Sets the activation function and its derivative for a specific layer.
-     * @param idx Index of the layer.
-     * @param activation Activation function and its derivative.
-     * @return Reference to this instance for method chaining.
-     */
-    Network& set_layer_activation(size_t idx, const Activation& activation);
-
-    /**
      * @brief Layer getter.
      * @param idx Index of the layer to get.
      * @return Reference to the requested layer.

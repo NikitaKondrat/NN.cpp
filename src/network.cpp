@@ -128,11 +128,6 @@ Network& Network::set_dv(DataVendor* dv) {
     return *this;
 }
 
-Network& Network::set_layer_activation(size_t idx, const Activation& activation) {
-    get_layer(idx).activation() = activation;
-    return *this;
-}
-
 Layer& Network::get_layer(size_t idx) {
     if (idx >= n_layers)
         throw std::out_of_range("Layer index out of range");
