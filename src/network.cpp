@@ -16,6 +16,7 @@ Network::Network(const WeightVendor& wv, const ActivationVendor& av, DataVendor*
     for (size_t i{}; i < n_layers - 1; ++i) {
         const Weight& fetched_weight = wv.fetch(i);
         Weight& weight = weights[i];
+        layers[i + 1].z() = Vector(fetched_weight.w().rows());
 
         const Matrix& fetched_weight_matrix = fetched_weight.w();
         Matrix& weight_matrix = weight.w();
@@ -25,6 +26,7 @@ Network::Network(const WeightVendor& wv, const ActivationVendor& av, DataVendor*
         Vector& bias = weight.b();
         bias = fetched_bias;
     }
+    layers[0].z() = Vector(wv.fetch(0).w().cols());
 
     for (size_t i{}; i < n_layers; ++i)
         layers[i].activation() = av.fetch(i);
@@ -128,14 +130,62 @@ Network& Network::set_dv(DataVendor* dv) {
     return *this;
 }
 
-Layer& Network::get_layer(size_t idx) {
+size_t Network::get_n_layers() const noexcept {
+    return n_layers;
+}
+
+bool Network::get_wb() const noexcept {
+    return wb;
+}
+
+const Layer& Network::get_layer(size_t idx) const {
     if (idx >= n_layers)
         throw std::out_of_range("Layer index out of range");
     return layers[idx];
 }
 
-Weight& Network::get_weight(size_t idx) {
+const Weight& Network::get_weight(size_t idx) const {
     if (idx >= n_layers - 1)
         throw std::out_of_range("Weight index out of range");
     return weights[idx];
+}
+
+void save_network_weights(const Network& nw, const std::string& path) {
+    std::ofstream ofs(path);
+    if (!ofs.is_open())
+        throw std::runtime_error("Cannot open file for saving weights");
+    
+    size_t n_layers = nw.get_n_layers();
+    bool wb = nw.get_wb();
+    ofs << n_layers << " " << (wb ? 1 : 0) << std::endl;
+    
+    for (size_t i = 0; i < n_layers - 1; ++i) {
+        const Weight& weight = nw.get_weight(i);
+        const Matrix& weights = weight.w();
+        const Vector& bias = weight.b();
+        
+        size_t rows = weights.rows();
+        size_t cols = weights.cols();
+        ofs << rows << " " << cols << std::endl;
+        
+        for (size_t r = 0; r < rows; ++r) {
+            const float* row_data = weights[r].data();
+            for (size_t c = 0; c < cols; ++c) {
+                ofs << row_data[c];
+                if (c + 1 < cols) 
+                    ofs << " ";
+            }
+            ofs << std::endl;
+        }
+        if (wb) {
+            const float* bias_data = bias.data();
+            for (size_t j = 0; j < bias.size(); ++j) {
+                ofs << bias_data[j];
+                if (j + 1 < bias.size()) 
+                    ofs << " ";
+            }
+            ofs << std::endl;
+        }
+    }
+    ofs.close();
 }

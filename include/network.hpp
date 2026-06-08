@@ -140,16 +140,36 @@ public:
     Network& set_dv(DataVendor* dv);
 
     /**
+     * @brief Number of layers getter.
+     * @return Number of layers.
+     */
+    size_t get_n_layers() const noexcept;
+
+    /**
+     * @brief With bias flag getter.
+     * @return With bias flag.
+     */
+    bool get_wb() const noexcept;
+
+    /**
      * @brief Layer getter.
      * @param idx Index of the layer to get.
      * @return Reference to the requested layer.
      */
-    Layer& get_layer(size_t idx);
+    const Layer& get_layer(size_t idx) const;
 
     /**
      * @brief Weight getter.
      * @param idx Index of the weight to get.
      * @return Reference to the requested weight.
      */
-    Weight& get_weight(size_t idx);
+    const Weight& get_weight(size_t idx) const;
 };
+
+/**
+* @brief Saves neural network weights to a file.
+* @param net Reference to the neural network.
+* @param path Path to the output file.
+* @note The file format is compatible with `FileWeightVendor`.
+*/
+void save_network_weights(const Network& nw, const std::string& path);

@@ -3,7 +3,8 @@ import csv
 import random
 from pathlib import Path
 
-DATA_DIR = Path(__file__).parent.resolve().parent / 'data'
+BASE_DIR = Path(__file__).parent.parent
+DATA_DIR = BASE_DIR / 'data'
 PREPARED_DATA_DIR = DATA_DIR / 'prepared'
 
 def prepare_datasets(csv_name, dataset_prefix, train_ratio=0.8, seed=42):
@@ -38,6 +39,12 @@ def prepare_datasets(csv_name, dataset_prefix, train_ratio=0.8, seed=42):
 if __name__ == "__main__":
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     PREPARED_DATA_DIR.mkdir(parents=True, exist_ok=True)
-    prepare_datasets('dataset1.csv', 'dataset1')
-    prepare_datasets('dataset2.csv', 'dataset2')
-    print("Datasets prepared.")
+
+    csv_files = list(DATA_DIR.glob("*.csv"))
+    if not csv_files:
+        print("No CSV files found in data/")
+    else:
+        for csv_file in csv_files:
+            dataset_prefix = csv_file.stem
+            prepare_datasets(csv_file.name, dataset_prefix)
+        print("All datasets prepared.")

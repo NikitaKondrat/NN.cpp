@@ -15,6 +15,7 @@ PYBIND11_MODULE(bind, m) {
     m.def("sigmoid", &sigmoid);
     m.def("sigmoid_deriv", &sigmoid_deriv);
     m.def("bce_lp", &bce_lp, py::arg("est"), py::arg("ans"));
+    m.def("save_weights", &save_network_weights, py::arg("network"), py::arg("path"));
 
     py::class_<Activation>(m, "Activation")
         .def(py::init<std::function<float(float)>, std::function<float(float)>>());
@@ -26,6 +27,9 @@ PYBIND11_MODULE(bind, m) {
              py::arg("n_layers"), py::arg("in_size"), py::arg("l_size"),
              py::arg("out_size"), py::arg("with_bias") = false,
              py::arg("a") = -1.0f, py::arg("b") = 1.0f);
+        
+    py::class_<FileWeightVendor, WeightVendor>(m, "FileWeightVendor")
+        .def(py::init<const std::string&>(), py::arg("path"));
 
     py::class_<ActivationVendor>(m, "ActivationVendor")
         .def(py::init<size_t>(), py::arg("n_layers"))
