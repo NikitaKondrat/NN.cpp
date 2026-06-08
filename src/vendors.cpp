@@ -59,9 +59,9 @@ FileWeightVendor::FileWeightVendor(const std::string& path) {
     std::ifstream ifs(path);
     bool with_bias;
     ifs >> count_ >> with_bias;
-    weights = new Weight[count_];
+    weights = new Weight[count_ - 1];
 
-    for (size_t l{}; l < count_; ++l) {
+    for (size_t l{}; l < count_ - 1; ++l) {
         size_t r, c;
         ifs >> r >> c;
         Matrix weight(r, c);

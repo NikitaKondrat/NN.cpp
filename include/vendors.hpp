@@ -149,7 +149,7 @@ public:
  * 
  * @par Expected File Structure:
  * 1. **Header**:
- *    - `count` (size_t)    : Number of weight layers to load.
+ *    - `count` (size_t)    : Number of weight layers to load + 1.
  *    - `with_bias` (bool)  : Non-zero if bias vectors are present in the file.
  * 2. **Layer Blocks** (repeated exactly `count` times):
  *    - `rows` `cols`       : Dimensions of the weight matrix.

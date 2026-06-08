@@ -5,6 +5,7 @@ project(nn VERSION 1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# ========== Main ==========
 add_executable(nn main.cpp 
     src/vector.cpp
     src/matrix.cpp 
@@ -14,15 +15,13 @@ add_executable(nn main.cpp
 )     
 target_include_directories(nn PRIVATE include)
 
-
+# ========== Tests ==========
 include(FetchContent)
-
 FetchContent_Declare(
-  Catch2
-  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v3.8.1
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG        v3.8.1
 )
-
 FetchContent_MakeAvailable(Catch2)
 
 add_executable(tests tests.cpp 
@@ -34,3 +33,22 @@ add_executable(tests tests.cpp
 )
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 target_include_directories(tests PRIVATE include)
+
+# ========== Bindings ==========
+include(FetchContent)
+FetchContent_Declare(
+    pybind11
+    GIT_REPOSITORY https://github.com/pybind/pybind11.git
+    GIT_TAG v2.13.6
+)
+ FetchContent_MakeAvailable(pybind11)
+
+ pybind11_add_module(bind 
+    bindings/bindings.cpp 
+    src/vector.cpp 
+    src/matrix.cpp 
+    src/vendors.cpp 
+    src/utils.cpp 
+    src/network.cpp
+)
+target_include_directories(bind PRIVATE include)
